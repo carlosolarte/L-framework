@@ -1,4 +1,3 @@
-# L-Framework
 
 The L-Framework use rewrite- and narrowing-based reasoning for proving crucial
 properties of sequent systems such as admissibility of structural rules,
@@ -18,8 +17,8 @@ No extra library is needed for execution. The tool produces
 ## Structure of the Project
 
 The root directory contains the Maude files specifying the different procedures
-and analyses. The directory [examples](./examples) contains case studies
-including systems for classical and intuitionistic logic as well as modal and
+and analyses. The directory `examples` contains case studies including systems
+for classical and intuitionistic logic as well as modal and
 substructural logics. 
 
 
@@ -33,8 +32,8 @@ theories.
 
 ## Case Studies
 
-The directory [examples](../examples) contains several case studies. In each
-case, the following files can be found:
+The directory `examples` contains several case studies. In each case, the
+following files can be found:
 
 - `logic.maude`: defining the syntax and inference rules of the sequent system
   considered.
@@ -66,7 +65,7 @@ Proving the case impR	......	[OK]
 ...
 ```
 
-The bash [script](../examples/exec.sh) runs all the case studies. 
+The bash `examples/exec.sh` runs all the case studies. 
 
 ## Results
 
