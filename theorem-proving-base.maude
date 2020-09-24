@@ -1,0 +1,107 @@
+--- -------------------------
+--- Theorem Proving Base
+--- ------------------------
+
+--- Common definitions for the different analyses
+load sequent .
+    
+mod THEOREM-PROVING-BASE is
+    pr SEQUENT-SOLVING .
+
+    -------------------------------------------
+    vars  M              : Module .
+    vars  QL QL'         : QidList .
+    vars Q Q'            : Qid .
+    var  R               : Rule .
+    var  RS              : RuleSet .
+    vars GT GT' GT''     : GroundTerm .
+    var  LGT             : GroundTermList .
+    -------------------------------------------
+
+    --- ------------------------------------------------------
+    --- Given a ground term representing a goal (a list of sequents),
+    --- returns rules of the form S  => proved
+    --- ------------------------------------------------------
+    op premises : GroundTerm -> RuleSet .
+    op premises : Qid GroundTerm -> RuleSet .
+    eq premises(GT) = premises('\Assumption, GT) .
+    eq premises(Q, '_:_['inf.INat,GT']) =
+	( rl '_:_['inf.INat,GT'] => 'proved.Goal [ label(Q)]. ) .
+
+    --- If there is a proof with a constant height, then there is also a proof with inf
+    eq premises(Q, '_:_[GT,GT']) =
+	( rl '_:_[GT,GT'] => 'proved.Goal [ label(Q)]. ) 
+	( rl '_:_['inf.INat,GT'] => 'proved.Goal [ label(Q)]. ) [owise] .
+
+
+    eq premises(Q, '_|_[GT, GT'])
+      = premises(Q, GT) premises(Q, GT') .
+    eq premises(Q, GT) = none [owise] .
+
+    --- premise-label for list of terms
+    op premises-labelL : Qid GroundTermList -> RuleSet .
+    op premises-labelL : Qid GroundTermList RuleSet -> RuleSet .
+    eq premises-labelL(Q, LGT)
+      = premises-labelL(Q, LGT, none) .
+    eq premises-labelL(Q, empty, RS)
+      = RS .
+    eq premises-labelL(Q, (GT, LGT), RS)
+      = premises-labelL(Q, LGT, premises(Q, GT) RS) .
+
+
+    --- Similar procedures but the -W versions have an implicit
+    --- weakening. This improves the search procedure for systems
+    --- where weakening is admissible: instead of adding an explicit
+    --- rule for weakening, the axioms do weakening implicitly. 
+    op premises-W : GroundTerm -> RuleSet .
+    eq premises-W(GT) = premises-label-W('\AssumptionW, GT) .
+    op premises-label-W : Qid GroundTerm -> RuleSet .
+    eq premises-label-W(Q , '_:_[GT,'_|--_[GT',GT'']]) =
+	( crl '_:_[GT, '_|--_['TA:MSFormula, 'TB:MSFormula]] => 'proved.Goal
+	if 'true.Bool = '_and_['subset[GT', 'TA:MSFormula], 'subset[GT'', 'TB:MSFormula]] [ label(Q)]. ) 
+	  ( crl '_:_['inf.INat, '_|--_['TA:MSFormula, 'TB:MSFormula]] => 'proved.Goal if 'true.Bool = '_and_['subset[GT', 'TA:MSFormula], 'subset[GT'', 'TB:MSFormula]] [ label(Q)]. ) .
+    eq premises-label-W(Q , '_|_[GT, GT'])
+      = premises-label-W(Q , GT) premises-label-W(Q, GT') .
+    eq premises-label-W(Q , GT) = none [owise] .
+
+    --- ------------------------------------------------------
+    --- Generating the invertible rules
+    --- preserving the height and also with "unknown" measure
+    --- ------------------------------------------------------
+
+    op inv-rules-H : Module QidList -> RuleSet [memo] .
+    op inv-rules-H : Module QidList RuleSet -> RuleSet .
+    eq inv-rules-H(M, QL)
+      = inv-rules-H (M, QL, none) .
+    eq inv-rules-H (M, nil, RS)
+      = RS .
+
+
+    eq inv-rules-H(M, (Q QL), RS)
+      = inv-rules-H(M, QL, inv-Rule(M, Q) RS) .
+    op inv-Rule : Module Qid -> RuleSet .
+    eq inv-Rule(M, Q) = getInvRule(Q, M) --- same height
+                        getInvRuleInf(Q ,M) . --- with "unknown" height
+
+
+    --- Given a ground term representing a goal (a list of
+    --- sequents), returns as axioms the application of the
+    --- invertibility lemmas on the sequents of the goal
+    op inv-premises : Module QidList GroundTerm -> RuleSet .
+    op inv-premises : Module QidList GroundTerm RuleSet -> RuleSet .
+    eq inv-premises(M, QL, '_:_[GT,GT'])
+      = inv-premises(M,QL,  '_:_[GT,GT'], inv-rules-H(M, QL)) 
+        inv-premises(M,QL,  '_:_['inf.INat, GT'], inv-rules-H(M, QL)) .
+    eq inv-premises(M, QL, '_|_[GT, GT'])
+      = inv-premises(M, QL, GT) inv-premises(M, QL, GT') .
+    eq inv-premises(M, QL, GT) = none [owise] .
+    
+    eq inv-premises(M, QL, GT , RS)
+      = premises-labelL('\AssumptionInv, one-step(project(M, RS), GT) ) .
+    
+    --- Building the derivation tree from the two premises of the cut
+    op toLeaves : Module GroundTerm -> ATree .
+    eq toLeaves(M, '_:_[GT, GT']) = AL(toTexSAbs(M, '_:_[GT, GT'])) .
+    eq toLeaves(M, '_|_[GT, GT']) = toLeaves(M, GT) , toLeaves(M, GT') .
+    eq toLeaves(M, 'proved.Goal) = AL("") .
+endm

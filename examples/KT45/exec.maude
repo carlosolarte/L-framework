@@ -1,0 +1,27 @@
+--- Executing all the analysis 
+set show advisories off .
+set show command off .
+
+load KT45 .
+load prop-W .
+load prop-inv .
+load prop-cut .
+load prop-ID .
+
+--- Weakening on the left and right 
+erew in PROVE-W : prove-it .
+erew in PROVE-WR : prove-it .
+
+--- Height of derivations
+erew in PROVE-HEIGHT : prove-it .
+
+--- Invertibility lemmas
+erew in PROVE-INV : prove-it .
+
+--- ID expansion
+erew in PROVE-ID : prove-it .
+
+--- Cut-elimination
+erew in PROVE-CUT : prove-it .
+
+quit .

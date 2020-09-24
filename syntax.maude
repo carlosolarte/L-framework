@@ -1,0 +1,111 @@
+--- --------------------------
+--- Syntax of the Object Logic
+--- --------------------------
+
+***(
+    Base sorts for defining the syntax of the object logic (OL). Sorts
+    Prop (for atomic OL formulas) and Formula are defined. The sort
+    MSFormula represents a multiset of formulas where * is the empty
+    set.
+
+    Implementing the syntax of the OL requires to:
+
+    (1) Extend the module SYNTAX-BASE 
+
+    (2) Define constructors for Prop. For instance, ops p : Nat -> Prop [ctor].
+    Meaning that atoms take the form p(n)
+
+    (3) Define constructors for the connectives of the OL. For instance,
+    op _/\_ : Formula Formula -> Formula [ctor] .
+
+    (4) Write an equation defining TEXReplacement. This is only needed
+    if LaTeX outputs are expected. A simple solution is to define
+    (eq TEXReplacement = empty .). Mappings from connectives to
+    LaTeX commands can be specified as follow:
+    eq TEXReplacement = ('/\ |-> '\wedge) , ('\/ |-> '\vee) .
+)
+
+load nat-inf .
+load io-ext .
+load meta-level-ext .
+
+--- Syntax
+fmod SYNTAX-BASE is
+
+  pr NAT .
+  pr META-LEVEL-EXT .
+  pr QID .
+  pr MAP{Qid, Qid} .
+
+
+  sort Prop . --- Atomic propositions
+  sort Formula . --- Formulas 
+  subsort Prop < Formula .
+
+  --- --------------------
+  --- Multiset of Formulas
+  --- Multiset of Formulas
+  sort MSFormula . 
+  subsort Formula < MSFormula .
+  op * : -> MSFormula . ---  empty multiset of formulas
+  op _;_ : MSFormula MSFormula -> MSFormula [prec 40 ctor assoc comm id: * ] .
+
+  --- ----------------------------
+  var F          : Formula .
+  vars C C'      : MSFormula .
+  vars QL QL'    : QidList .
+  var Q          : Qid .
+  var QKind      : [Qid] .
+  var map        : Map{Qid, Qid} .
+  --- -----------------------------
+
+  --- Operations on multisets
+  op in : Formula MSFormula -> Bool .
+  eq in(F, (F ; C)) = true .
+  eq in(F,C) = false [owise] .
+
+  op subset : MSFormula MSFormula -> Bool .
+  eq subset(C, (C ; C')) = true .
+  eq subset(C,C') = false [owise] .
+
+  op isEmpty : MSFormula -> Bool .
+  eq isEmpty(C) =  C == * .
+
+  op duplicated? : MSFormula -> Bool .
+  ceq duplicated?( (C ; C ; C')) = true 
+    if C =/= * .
+  eq duplicated?( C ) = false [owise] .
+
+  --- --------------------------------
+  --- LaTex Utilities and Pretty Print
+  --- --------------------------------
+  --- Replacing OL symbols with Latex symbols
+  op TEXReplacement : -> Map{ Qid, Qid } .
+
+
+  --- Pretty print for sequents and formulas
+  op replaceTex : QidList Map{Qid, Qid} -> QidList . 
+  op replaceTex : QidList -> QidList .
+  op replaceTex$ : QidList Map{Qid, Qid} QidList -> QidList .
+  op replaceTex$$ : QidList Map{Qid, Qid} QidList -> QidList .
+
+  eq replaceTex(QL) = replaceTex(QL, empty) .
+  eq replaceTex(QL,map) = replaceTex$(QL, map, nil) .
+
+  eq replaceTex$(nil, map, QL') = QL' .
+  eq replaceTex$( (': QL'), map, QL) = parseNumber(QL) ': replaceTex$$(QL', map, nil) .
+  eq replaceTex$(Q QL', map, QL) = replaceTex$(QL', map, QL Q) [owise] .
+
+  eq replaceTex$$(nil, map, QL') = QL' .
+  ceq replaceTex$$(Q QL, map, QL') = 
+    replaceTex$$(QL, map, QL' (if QKind == undefined then Q else QKind fi) )
+    if QKind := map[Q] .
+
+  --- Print for numbers (inductive measures)
+  --- suc(suc(...(suc n))) ==> . . . . n
+  op parseNumber : QidList -> QidList .
+  eq parseNumber(QL) = replaceTex$$(QL,
+      ( ('`( |-> '\wspace  ) , ('`) |-> '\wspace  ),
+        ('suc |-> '\suc ), ('z |-> '\wspace ),
+        ('inf |-> '\noheight )),nil) .
+endfm

@@ -1,0 +1,271 @@
+--- -----------------------
+--- Permutability of rules
+--- -----------------------
+
+***(
+
+The analysis of permutability of rules cannot be guaranteed to work in all
+systems. The main reason is that its definition requires a notion for principal
+and auxiliary formula that cannot be formalized in a general way (it is
+specific for the system to be considered). The results reported by this
+analysis must be carefully checked 
+
+This analysis is relatively simpler than the others since no inductive measures
+are needed (only proof transformations)
+
+)
+    
+load theorem-proving-base .
+
+    
+fth PERM-SPEC is
+    pr META-LEVEL .
+    --- Name of the module with the object-logic description
+    op mod-name : -> Qid .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    --- already proved theorems
+    op already-proved-theorems : -> RuleSet .
+    --- Invertible rules
+    op inv-rules : -> QidList .
+    --- File name to write the output
+    op file-name : -> String .
+endfth
+
+mod PERM-ALG{SPEC :: PERM-SPEC} is
+    pr THEOREM-PROVING-BASE .
+
+    ----------------------------
+    vars  M M'           : Module .
+    var  N               : Nat .
+    vars Q Q'            : Qid .
+    var QR               : Qid .
+    var  R               : Rule .
+    var  RS              : RuleSet .
+    var  LGT             : GroundTermList .
+    vars T  T' T''       : Term .
+    vars TA  TB          : Term .
+    vars TC TC' TP TP'   : Term .
+    vars GT GT' GT''     : GroundTerm .
+    vars GTA GTB         : GroundTerm .
+    var GG               : GroundTerm .
+    vars GTC GTP GTP'    : GroundTerm .
+    var gh               : GroundTerm .
+    var  UT              : UnificationTriple? .
+    var Ans              : Trace? .
+    var str              : String .
+    var AS              : AttrSet .
+    var Res              : Result .
+    var nrule            : Nat .
+    var B                : Bool .
+    var res              : Result .
+    vars SL SR           : Substitution .
+    var Pcase            : Perm-Case .
+    var Pcases           : Perm-Cases .
+    ----------------------------
+
+    --- ===========================
+    --- Parameters of the analysis.  
+    --- ===========================
+    op module : -> Module .
+    eq module = labelSeqInf(upModule(mod-name, false )) .
+    op bound-search : -> Nat .
+    eq bound-search = bound-spec .
+
+    
+    --- ===========================
+    --- Cases
+    --- ===========================
+    --- The order of the parameters is as follows:
+    --- Identifiers of the 2 rules being analyzed
+    --- TC: sequent where both rules unify
+    --- TP: Premises without the one where the other rule will be applied
+    --- TC': Premise where the other rule is applied
+    --- TP': After the application of the second rule in TC'
+    --- TG: Goal (application of the second rule in TC
+
+    sort Perm-Case Perm-Cases .
+    subsort Perm-Case < Perm-Cases .
+    op perm-case : Qid Qid Term Term Term Term Term   -> Perm-Case [ctor] .
+    --- The case after changing variables with fresh constants
+    op perm-case : Qid Qid Module GroundTerm GroundTerm GroundTerm  GroundTerm GroundTerm -> Perm-Case [ctor] .
+    op no-case : -> Perm-Cases [ctor] .
+
+    --- Lists of cases
+    op _;;_ : Perm-Cases Perm-Cases -> Perm-Cases [ctor assoc id: no-case] .
+
+    op generate-cases : Qid Qid -> Perm-Cases .
+    eq generate-cases(Q, Q') 
+        =  generate-cases(0, concatenate('INF, Q'), concatenate('INF, Q)) .
+
+
+    --- Unifying the heads of the rules
+    op generate-cases : Nat Qid Qid -> Perm-Cases .
+    ceq  generate-cases(N,Q, Q')
+      = if UT == (noUnifier).UnificationTriple?
+	then no-case
+	else 
+        generate-cases(s(N), Q, Q') ;;
+        generate-cases(Q, Q', apply(T, left(UT)), UT)
+	fi
+    if
+	   T  := getHead(Q, module)
+	/\ T' :=  getHead(Q', module)
+	/\ UT := metaVariantDisjointUnify(module, T =? T', empty, 0, N)
+    .
+    --- Given a unifier, apply both rules  to see the premises
+    op generate-cases : Qid Qid Term UnificationTriple -> Perm-Cases .
+    ceq generate-cases(Q, Q', T, { SL, SR, N})
+     =  generate-cases(Q,Q', T, TC, 'proved.Goal, {SL, SR, N})
+     if TC := applyRule(T, Q, module, SL) .
+
+    --- The 4th parameter is the set of premises after the application of Q
+    --- The 5th parameter is used to carry the other premises in the recursion
+    op generate-cases : Qid Qid Term Term Term UnificationTriple -> Perm-Cases .
+    eq generate-cases(Q, Q', T, 'proved.Goal, TP,  { SL, SR, N })
+     = no-case .
+
+    eq generate-cases(Q, Q', T, '_|_[TA, TB], TP, { SL, SR, N })
+      = generate-cases(Q, Q', T, TA, '_|_[TB, TP], { SL, SR, N }) ;;
+        generate-cases(Q, Q', T, TB, '_|_[TA, TP], { SL, SR, N}) .
+
+    ceq generate-cases(Q, Q', T, '_:_[TA, TB], TP, { SL, SR, N })
+     = if TC == 'error.Goal 
+       then no-case
+       else perm-case(Q, Q', T, TP, '_:_[TA, TB], TC, applyRule(T, Q', module, SR))
+       fi
+     if TC := applyRule('_:_[TA, TB], Q', module) .
+
+
+    --- =============================
+    --- The permutability algorithm
+    --- =============================
+    
+
+    --- The first nat parameter can be 0 (left premise) or 1 (left
+    --- premise) for rules with 2 premises
+    op holds? : Perm-Cases -> Result .
+    op holds? : Perm-Cases Result -> Result .
+    eq holds?(Pcases) = holds?(Pcases, emptyR) .
+
+    eq holds?(no-case, Res) = Res .
+    eq holds?((Pcase ;; Pcases), Res) 
+        = holds?(Pcases, Res + $holds?(Pcase)) .
+
+    --- non-ground case
+    op $holds? : Perm-Case -> Result .
+    ceq $holds?( perm-case(Q, Q', T, TP, '_:_[TA, TB], TC, TP'))
+     = $holds?( perm-case(Q, Q', M, GT, GTP, '_:_[GTA, GTB], GTC, GTP'))
+    if
+	  pair-TC('join[GT, GTP, GTA, GTB, GTC, GTP'], LGT) 
+        := toConstants('join[T, TP, TA, TB, TC, TP']) /\
+	  M := newModule(module, getNewOps(LGT)) .
+
+
+    --- One premise case
+    ceq $holds?(perm-case(Q,Q', M, GT, GTP, '_:_[GTA, GTB], GTC, GTP'))
+      = 
+      if Ans == failure
+        then < false , "\n\\reductionFail{" + toTex(M', Q, Q', GT, GTP, '_:_[GTA, GTB], GTC) + "}{" + toTex(M', Q, Q', GT, GTP')  + "}\n"  >
+        --- The trace is extended to consider the step GT -> GTP'
+        else < true , "\\[\n\\reduction{" + toTex(M', Q, Q', GT, GTP, '_:_[GTA, GTB], GTC) + "}\n{" + output(M', ({ GT , 'Goal ,  getRule(Q', module)} Ans )) + "}\\]\n" >
+	fi
+	--- Adding the already proved theorems
+      if
+	  M' := newModuleRls(project(M, getRule(Q, M)), 
+        inv-premises(M, inv-rules, GTP) 
+        inv-premises(M, inv-rules, GTC) 
+        already-proved-theorems 
+        premises(GTP) premises(GTC)) 
+      /\ Ans := metaSearchPath(M', GTP', upTerm(proved), nil, '*, bound-spec, 0)
+	  .
+
+    --- Building the derivation tree for the hypotheses
+    op toTex : Module Qid Qid GroundTerm GroundTerm GroundTerm GroundTerm -> String .
+    eq toTex(M, Q, Q', GT, GTP, GTC, GTP') =
+     toTex(AT(toTexSAbs(M, GT), ruleName(module, Q),
+      (if GTP == 'proved.Goal then Aemp else toLeaves(M, GTP) fi)
+      ,
+      AT(toTexSAbs(M, GTC), ruleName(module,Q'), toLeaves(M, GTP')))) . 
+
+    
+    --- Printing the failing case
+    op toTex : Module Qid Qid GroundTerm GroundTerm -> String .
+    eq toTex(M, Q, Q', GTC, GTP) =
+     toTex(AT(toTexSAbs(M, GTC), ruleName(module, Q'), toLeaves(M, GTP))) . 
+
+endm
+
+
+--- -------------------------------------
+--- Protocol calling the needed functions
+--- -------------------------------------
+mod PERM-PROVING{SPEC :: PERM-SPEC} is
+    pr PERM-ALG{SPEC} .
+    
+    --- -------------------------------
+    var Res              : Result .
+    vars Q Q'            : Qid .
+    var nrule            : Nat .
+    var B                : Bool .
+    vars  QL QL'         : QidList .
+    vars txt txt' txt''  : String .
+    --- -------------------------------
+    
+    op cpr : -> Cid .
+    op opr : -> Oid .
+    op ocase : -> Oid . 
+    op out:_ : Result -> Attribute .
+    ops cases:_ : QidList -> Attribute .
+    ops subcases:_ : QidList -> Attribute .
+    op case:_ : Qid -> Attribute .
+    ops ready busy : -> Attribute .
+    op wait-print:_ : Bool -> Attribute .
+    op prove-it : -> Configuration .
+    
+    rl prove-it =>
+	<>
+	Println("Permutability Analysis\n*************************************************")
+	< opr : cpr | ready,
+		      out: (< true , "\\section{ Permutability of Rules}\n" > ) ,
+	cases: ruleNamesFinite(module) > .
+
+    rl < opr : cpr | ready, out: Res, cases: (Q QL) >
+      =>
+	< opr : cpr | busy, out: Res, cases: (QL) >
+	< ocase : cpr | out: emptyR, case: Q, subcases: (ruleNamesFinite(module)) >
+    .
+    
+    op printCase : Qid Bool -> String .
+    eq printCase(Q, B)
+      =   "Case " + string(Q) + "\t......\t" + print-output(B)
+	.
+    
+    crl < ocase : cpr | out: < B , txt > , case: Q, subcases: nil >
+	    < opr : cpr | busy, out: Res, cases: (QL) >
+      =>
+	Println(printCase(Q, B))
+	    < opr : cpr | ready, out: (Res + < true , txt' >) , cases: (QL) >
+	if
+	    
+	    txt' :=
+	    "\\subsection{Status of  $" + string(ruleName(module,Q)) + "$~"
+	      + if B then "\\permutes" else "\\nopermutes" fi
+	      + "}\n" +
+	    "\\begin{itemize}\n"  + txt + "\n\\end{itemize}" .
+
+    
+    crl < ocase : cpr | out: Res , case: Q, subcases: (Q' QL) >
+      =>
+	< ocase : cpr | out: (Res + < B ,
+			  "\n\\item Case rule $" + string(ruleName(module,Q')) + "$\\\\\n" + txt  >)  ,
+	case: Q, subcases: QL >
+      if < B , txt > := holds?(generate-cases(Q, Q')) 
+	  .
+    
+    
+    rl < opr : cpr | ready, out: < B , txt >, cases: nil > =>
+	Println("Done! ....... \t")
+	Println("Output: " + file-name) 
+	Write(txt , file-name, "w+") .
+endm

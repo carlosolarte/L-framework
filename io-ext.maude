@@ -1,0 +1,72 @@
+--- -----------------------
+--- IO Auxiliary functions
+--- -----------------------
+
+***(
+
+This file extends the functionalities for IO in Maude including writing to
+files and printing
+)
+
+    
+load file .
+
+mod IO-EXT is
+
+    including FILE .
+    including STD-STREAM . 
+
+    op class : -> Cid . 
+    ops fout cout : -> Oid .
+    ops text:_ : String -> Attribute .
+    
+    
+    --- -----------------------------
+    vars txt filename mode : String .
+    vars handler : Oid .
+    --- -----------------------------
+
+    --- Writing to a file
+    
+    op Write : String String String  -> Msg .
+    op write : String String String -> Configuration .
+    op write : String String -> Configuration .
+    eq write(txt, filename) = write(txt, filename, "a+") .
+
+    eq Write(txt, filename,mode)
+      =
+	< fout : class | text: (txt) > 
+	openFile(fileManager, fout, filename, mode) . 
+
+    eq write(txt, filename,mode)
+      = <>
+	Write(txt, filename,mode) .
+
+    rl < fout : class | text: txt  >
+	openedFile(fout, fileManager, handler) 
+      =>
+	< fout : class | text: txt >
+	write(handler, fout, txt) .
+
+    rl < fout : class | text: txt  >  wrote(fout,  handler) 
+      => < fout : class | text: txt >  closeFile(handler, fout) .
+    
+    rl < fout : class | text: txt  >  closedFile(fout,  handler) 
+      => none .
+
+    --- Echoing (on stdout) and returning the same string
+    op first : Configuration -> String .
+    op print : String -> String .
+    
+    op println : String -> String .
+    eq println(txt) = print(txt + "\n") .
+    eq print(txt)
+      = first(<>  < cout : class | text: (txt) >  write(stdout, fout, txt)) .
+    
+    rl first(<> < cout : class | text: txt  > ) => txt .
+
+    op Println : String -> Configuration .
+    eq Println(txt) = write(stdout, cout, txt + "\n") .
+    op Print : String -> Configuration .
+    eq Print(txt) = write(stdout, cout, txt) .
+endm

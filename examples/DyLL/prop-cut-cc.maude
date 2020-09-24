@@ -1,0 +1,47 @@
+--- Cut Elimination theorem
+--- Both weakening (on the classical context) and the hight-measure
+--- Weakening is internalized in the cut-elimination procedure (see
+--- premises-label in the cut-elimination-linear-dyadic.maude file )
+--- theorem are needed
+load cut-dyadic-cc .
+mod CUT-LL-CC is
+    pr META-LEVEL .
+    pr LL .
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 12 .
+
+    --- We assume the theorem on heights
+    --- If [G] ; D, !F is provable then [G] ; D, F is also provable
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems =
+	( rl '_:_['suc['n:FNat],  '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula]] => 
+        '_:_['n:FNat, '|--<_>_['Gamma:MSFormula,'Delta:MSFormula]]
+          [ label('H) ]. )
+	( rl '_:_['n:FNat,  '|--<_>_['_;_['Gamma:MSFormula, 'F:Formula], 'Delta:MSFormula]] => 
+        '_:_['n:FNat, '|--<_>_['Gamma:MSFormula,'Delta:MSFormula]]
+          [ label('W) ]. )
+	( rl '_:_['inf:INat,  '|--<_>_['Gamma:MSFormula, '_;_['F:Formula , 'Delta:MSFormula]]] => 
+          '_:_['inf:INat,  '|--<_>_['Gamma:MSFormula, '_;_['!_['F:Formula], 'Delta:MSFormula]]]
+	--- if 'true.Bool = '_=/=_['Delta:MSFormula, '*.MSFormula]
+          [ label('BInv) ]. )
+    .
+    --- File name to write the output
+    op file-name : -> String .
+    eq file-name = "cut-CC.tex" .
+
+    --- No invertible lemmas are needed
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT:GroundTerm) = none .
+
+endm
+    
+view Cut-LL-CC from CUT-SPEC to CUT-LL-CC is endv    
+
+mod PROVE-CUT-CC is pr CUT-PROVING{Cut-LL-CC} . endm

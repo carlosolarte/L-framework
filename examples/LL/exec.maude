@@ -1,0 +1,31 @@
+--- Executing all the analysis 
+set show advisories off .
+set show command off .
+
+load LL .
+load prop-H .
+load prop-inv .
+load prop-WB .
+load prop-ID .
+    
+--- Height of derivations
+erew in PROVE-HEIGHT : prove-it .
+
+--- Bang weakening
+erew in PROVE-INV-BANG : prove-it .
+
+--- Invertibility lemmas
+erew in PROVE-INV : prove-it .
+
+--- ID expansion
+erew in PROVE-ID : prove-it .
+
+--- Cut-Elimination
+load prop-cut .
+erew in PROVE-CUT : prove-it .
+
+--- Cut-elimination CC
+load prop-cut-cc .
+erew in PROVE-CUT-CC : prove-it .
+
+quit .

@@ -1,0 +1,52 @@
+--- Theorem: |-- [Gamma] ; Delta, !F
+--- implies
+--- |-- [Gamma] ; Delta, F
+--- The case of bang requires the height lemma
+
+load ../../admissibility .
+fmod ADMISSIBILITY-INV-BANG is
+    pr META-LEVEL .
+
+    op th-name : -> String .
+    eq th-name = "Weakening on bang: $\\vdash \\Gamma, !F$ implies $\\Gamma, F$. " .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+
+    vars GT GT' GT'' GF : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['n:FNat,  '|--<_>_['Gamma:MSFormula, '_;_['G:Formula, 'Delta:MSFormula]]] =>
+	  '_:_['n:FNat, '|--<_>_['Gamma:MSFormula, '_;_['!_['G:Formula], 'Delta:MSFormula ]]]
+	  [ label('WB) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "bang-inv.tex" .
+
+    --- Invertibility is not needed for these theorems
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction is needed in this case
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT) = none .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems 
+      = ( rl '_:_['suc['n:FNat],  '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula]] =>
+	   '_:_['n:FNat, '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula ]]
+	   [ label('H) ]. ) .
+
+
+endfm
+
+view Admissibility-INV-BANG from ADMISSIBILITY-SPEC to ADMISSIBILITY-INV-BANG is endv    
+
+mod PROVE-INV-BANG is pr  ADMISSIBILITY-THEOREM{Admissibility-INV-BANG} . endm
+eof
+

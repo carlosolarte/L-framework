@@ -1,0 +1,30 @@
+load LL .
+load ../../permutability .
+fmod PERM is
+    pr META-LEVEL .
+
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "permute.tex" .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems  = none .
+
+    op inv-rules : -> QidList .
+    eq inv-rules = nil . 
+
+
+    
+endfm
+
+view Perm from PERM-SPEC to PERM is endv    
+
+mod PROVE-PERM is pr  PERM-PROVING{Perm} . endm
+
+erew prove-it .

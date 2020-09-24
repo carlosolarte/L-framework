@@ -1,0 +1,114 @@
+load ../../cut-elimination-base .
+--- This procedure checks for cut-elimination for 1-sided system and
+--- the cut-rule multiplicative
+    
+    
+mod CUT-PROVING{SPEC :: CUT-SPEC} is
+    pr CUT-BASE{SPEC} .
+
+    ----------------------------
+    var  M M'           : Module .
+    vars Q Q'           : Qid .
+    var Ans             : Trace? .
+    vars gtc gtc'       : GroundTerm .
+    vars gtp gtp'       : GroundTerm .
+    var GTGoal          : GroundTerm .
+    var  RS             : RuleSet .
+    vars GTA GTB        : GroundTerm .
+    vars gh gh'         : GroundTerm .
+    vars GF GT GT'      : GroundTerm .
+    vars ncont          : GroundTerm .
+    ----------------------------
+    eq cut-rule =
+	( rl '_:_['inf.INat,  '|--_['_;_['Gamma$$:?MSFormula, 'Delta$$:MSFormula]]] =>
+	  '_|_['_:_['h1$$:FNat, '|--_['_;_['!_['FCut$$:Formula], 'Gamma$$:?MSFormula]]],
+	    '_:_['h2$$:FNat, '|--_['_;_['contract['s_['ncont$$:Nat], '?_['dual['FCut$$:Formula]]], 'Delta$$:MSFormula]]]]
+	  [ label('\Cut) ]. ) .
+
+
+
+
+    --- Solving the case with the needed hypotheses
+    ceq holds$?(Q, Q', cut-case(
+	    M,
+	    cut-sub-case(gtc, gtp),
+	    cut-sub-case(gtc', gtp'),
+	    GTGoal,
+	    GF)) 
+      = result(M', Q, Q', GTGoal, gtc, gtp, gtc', gtp', Ans)
+      if
+	  --- Premises
+	  RS := premises(gtc) premises(gtc')
+	  premises(gtp) premises(gtp')
+	  --- invertibility lemmas on the premises
+	  inv-premises(M, inv-rules, gtp) inv-premises(M, inv-rules,  gtp')
+	  already-proved-theorems
+	  --- Induction on the height of the derivation
+	  induct-height-alt(getHeight(gtc), getHeight(gtc'), getNumContraction(gtc'), GF)
+	  --- No induction on the structure needed here
+          --- Mutual induction on the CC theorem 
+          mutual-induct(gtc) 
+	  /\ M' := newModuleRls(M, RS) 
+	  /\  Ans := metaSearchPath(M', GTGoal, upTerm(proved), nil, '*, bound-spec, 0) .
+
+
+
+      --- No need of structural induction for this proof. Shorter formulas
+      --- are only used for mutual-induction
+     eq induct-struct-formula(GTA) 
+     = none .
+
+
+    --- The parameter is the left premise of the cut (a banged formula was introduced)
+    --- The cut is solved with a cut with a simpler formula
+    op mutual-induct :  GroundTerm -> RuleSet .  
+    eq mutual-induct('_:_['suc[gh] , '|--_['_;_['!_[GTA] , GT]]])
+      = ( crl '_:_['inf.INat,  '|--_['_;_[GT, 'Delta:MSFormula]]] => 
+	  '_|_['_:_['inf.INat, '|--_['_;_[GTA, GT]]],
+	    '_:_['inf.INat, '|--_['_;_['dual[GTA], '_;_[GT, 'Delta:MSFormula]]]]]
+	  if 'false.Bool = 'in[GTA, 'Delta:MSFormula]
+	  [ label('\mCut) ]. ) .
+    
+    eq mutual-induct(GT) = none [owise] .
+    
+    --- The cut-rule in this proof has an extra variable: the number of contraction
+    --- Induction on the height requires given a (ground) value to that variable
+    --- Note that such value can be arbitrary (no induction on that value is done)
+    --- Values needed to complete the proof is the same value (GT), s(GT), ss(GT) and 0
+    --- The first two parameters are the height of the 2 premises
+    --- The third parameter is the current number of contraction used in the second premise
+    --- The last parameter is the cut-formula
+
+    op induct-height-alt :  GroundTerm GroundTerm GroundTerm GroundTerm  -> RuleSet .  
+    op $induct-height-alt :  GroundTerm GroundTerm GroundTerm GroundTerm  -> RuleSet .  
+    
+    eq induct-height-alt('suc[gh], 'suc[gh'], ncont, GF) 
+      = 
+        $induct-height-alt('suc[gh], 'suc[gh'], 's_[ncont], GF) --- The same number of contractions
+        $induct-height-alt('suc[gh], 'suc[gh'], ncont, GF) --- A contraction less (weakeining)
+        $induct-height-alt('suc[gh], 'suc[gh'], 's_['s_[ncont]], GF) --- A contraction more (contraction)
+        $induct-height-alt('suc[gh], 'suc[gh'], 's_['0.Zero], GF) --- Only one copy
+      .
+
+    eq $induct-height-alt('suc[gh], 'suc[gh'], ncont, GF) =
+	( rl getHead(cut-rule) =>
+	  '_|_[   --- Fixing height and also the cut formula
+	    apply(pr1, ('ncont$$:Nat <- ncont ; 'h1$$:FNat <- gh ; 'FCut$$:Formula <- GF)),
+	    apply('_:_['h2$$:FNat, '|--_['_;_['contract[ncont, '?_['dual['FCut$$:Formula]]], 'Delta$$:MSFormula]]],
+              ('h2$$:FNat <- 'suc[gh'] ; 'FCut$$:Formula <- GF))]
+	  [ label('\hCut) ]. )
+	( rl getHead(cut-rule) =>
+	  '_|_[   --- Fixing height and also the cut formula
+	    apply(pr1, ('ncont$$:Nat <- ncont ; 'h1$$:FNat <- 'suc[gh] ; 'FCut$$:Formula <- GF)),
+	    apply('_:_['h2$$:FNat, '|--_['_;_['contract[ncont, '?_['dual['FCut$$:Formula]]], 'Delta$$:MSFormula]]],
+              ('h2$$:FNat <- gh' ; 'FCut$$:Formula <- GF))]
+	  [ label('\hCut) ]. )
+
+       .
+
+    --- Returns the number of constractions
+    op getNumContraction : GroundTerm -> GroundTerm .
+    eq getNumContraction('_:_[gh, '|--_['_;_['contract['s_[ncont], '?_['dual[GF]]], GTA]]])
+      =  ncont .
+    
+endm

@@ -1,0 +1,78 @@
+--- Modal logic S4
+
+load ../../admissibility .
+load ../../invertibility .
+
+mod S4 is
+    	ex SEQUENT-SOLVING .
+    
+    --- Atomic Propositions
+    ops p : Nat -> Prop [ctor] .
+
+    --- Conjunction
+    op _/\_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- Disjunction
+    op _\/_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- False
+    op False : -> Formula [ctor] .
+    --- True
+    op True : -> Formula [ctor] .
+    --- Implication
+    op _-->_ : Formula Formula -> Formula [ctor prec 35] .
+
+    sort BFormula . --- Boxed formulas (marked with Box )
+    subsort BFormula < Formula .
+    subsort BFormula < MSBFormula .
+    --- Boxes
+    op []_ : Formula -> BFormula [ctor prec 20] .
+    sort MSBFormula . --- multisets of boxed formulas
+    subsort MSBFormula < MSFormula .
+    op * : -> MSBFormula .
+    op _;_ : MSBFormula MSBFormula -> MSBFormula [prec 40 ctor assoc comm id: * ] .
+    op _;_ : MSFormula MSBFormula -> MSFormula [prec 40 ctor assoc comm id: * ] .
+
+    --- Removing boxes:
+    op unbox : MSBFormula -> MSFormula .
+    eq unbox(*) = * .
+    eq unbox(( ([] F) ; L:MSBFormula)) = F ; unbox(L:MSBFormula) .
+    ceq unbox( ( X:MSBFormula ; Y:MSBFormula)) =
+	unbox(X:MSBFormula) ; unbox(Y:MSBFormula)
+      if X:MSBFormula =/= * and-then Y:MSBFormula =/= * .
+
+
+    eq TEXReplacement =
+	('|-- |-> '\vdash), ('/\ |-> '\wedge) , ('\/ |-> '\vee) ,
+	('--> |-> '\iimp), ('; |-> '`, ), ('True |-> '\top),
+	('False |-> '\bot), ('GW |-> 'G_W)
+	.
+    
+    eq TEXReplacementSeq =
+	('AndL |-> '\wedge_L), ('AndR |-> '\wedge_R),
+	('OrL |-> '\vee_L), ('OrR |-> '\vee_R),
+	('botL |-> '\bot_L), ('botR |-> '\bot_R),
+	('topL |-> '\top_L), ('topR |-> '\top_R),
+	('impL |-> '\to_L), ('impR |-> '\to_R),
+        ('height |-> '\heightRule)
+	.
+    --- Fresh constant for weakening lemmas
+    op GW : -> Formula .
+    
+    var P : Prop .
+    vars F G H : Formula .
+    vars C1 C2 C C' : MSFormula .
+    
+    rl [I] :     P ; C |-- P ; C' => proved .
+    rl [AndL] :  F /\ G ; C |-- C' => F ; G ; C |-- C' .
+    rl [AndR] :  C |-- F /\ G ; C' =>  ( C |-- F ; C') | ( C |-- G ; C') .
+    rl [botL] :  C ; False |-- C' => proved .
+    rl [botR] :  C |-- False ; C' => C |-- C' .
+    rl [topR] :  C |-- True ; C' => proved .
+    rl [topL] :  C ; True |-- C' => C |-- C' .
+    rl [OrL] :   C ; F \/ G |-- C' => (C ; F |-- C') | (C ; G |-- C') .
+    rl [OrR] :   C |-- F \/ G ; C' =>  C |-- F ; G ; C' .
+    rl [impR] :  C |-- (F --> G) ; C' => C ; F |-- G ; C' .
+    rl [impL] :  C ; F --> G |-- C' => ( C  |-- F ; C') | ( C ; G |-- C') .
+    rl [K] : C ; BL:MSBFormula |-- C' ; [] F => unbox(BL:MSBFormula) |-- F .
+    rl [A4] : C ; BL:MSBFormula |-- C' ; [] F => BL:MSBFormula |-- F .
+    rl [AT] : C ; [] F |-- C' => C ; [] F ; F |-- C' .
+endm

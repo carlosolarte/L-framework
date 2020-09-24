@@ -1,0 +1,38 @@
+--- Executing all the analysis 
+set show advisories off .
+set show command off .
+
+load DyLL .
+load prop-W .
+load prop-C .
+load prop-H .
+load prop-inv .
+load prop-ID .
+
+
+--- Weakening (classical context)
+erew in PROVE-W : prove-it .
+
+--- Height of derivations
+erew in PROVE-HEIGHT : prove-it .
+
+--- Weakening (classical context)
+erew in PROVE-C : prove-it .
+
+--- Invertibility lemmas
+erew in PROVE-INV : prove-it .
+
+--- Weakening on bang
+load prop-WB .
+erew in PROVE-INV-BANG : prove-it .
+
+--- Id expansion
+erew in PROVE-ID : prove-it .
+
+--- Cut-Elimination
+load prop-cut .
+erew in PROVE-CUT : prove-it .
+load prop-cut-cc .
+erew in PROVE-CUT-CC : prove-it .
+
+quit .

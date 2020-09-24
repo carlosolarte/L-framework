@@ -1,0 +1,25 @@
+
+--- ---------------------------------------------------------
+--- Height preserving invertibility lemmas
+--- ---------------------------------------------------------
+
+fmod INV-KT45 is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'KT45 .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+    --- We assume that the Height theorem (if n|-- Gamma then s(n) |-- Gamma )
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems =
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => 
+        '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] 
+        [ label('height) ]. ) .
+    op file-name : -> String .
+    eq file-name = "inv.tex" .
+endfm
+
+view Inv-KT45 from INV-SPEC to INV-KT45 is endv    
+
+mod PROVE-INV is pr   INV-PROVING{Inv-KT45} . endm

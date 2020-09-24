@@ -1,0 +1,28 @@
+--- Invertibility lemmas.
+--- All the rules of the system G3c are invertible.
+--- The theorem (3) in g3c-prop-1 is assumed here (see
+--- already-proved-theorems)
+
+    
+--- ---------------------------------------------------------
+--- Height preserving invertibility lemmas
+--- ---------------------------------------------------------
+
+fmod INV-G3C is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'G3c .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+    --- We assume that the Height theorem (if n|-- Gamma then s(n) |-- Gamma )
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems =
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('height) ]. ) .
+    op file-name : -> String .
+    eq file-name = "inv.tex" .
+endfm
+
+view Inv-G3c from INV-SPEC to INV-G3C is endv    
+
+mod PROVE-INV is pr   INV-PROVING{Inv-G3c} . endm

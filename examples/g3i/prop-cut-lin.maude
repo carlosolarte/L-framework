@@ -1,0 +1,40 @@
+--- -----------------------------------------------------------------
+--- Cut Elimination theorem (Linear version)
+--- No invertibility lemma is needed here but contraction needs to be added.
+--- The version of contraction here is more controlled to avoid the state explosion
+--- -----------------------------------------------------------------
+load ../../cut-mul-scon.maude 
+
+fmod CUT-LIN-G3i is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'G3i .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    --- We assume the theorem on heights
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = 
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'F:Formula]] => 
+        '_:_['n:FNat, '_|--_['Gamma:MSFormula,'F:Formula]] [ label('H) ]. ) 
+    --- Contracting the whole context
+	( crl '_:_['inf.INat,  '_|--_['Gamma:MSFormula, 'F:Formula]] => 
+        '_:_[ 'inf.INat, '_|--_['_;_['Gamma:MSFormula, 'Gamma:MSFormula],'F:Formula]] 
+        if 'false.Bool = 'duplicated?['Gamma:MSFormula]
+        [ label('C) ]. ) .
+
+    --- File name to write the output
+    op file-name : -> String .
+    eq file-name = "cut-lin.tex" .
+
+    --- No invertibility lemma needed
+    op inv-rules : -> QidList .
+    eq inv-rules = nil . 
+endfm
+    
+view Cut-Lin-G3i from CUT-SPEC to CUT-LIN-G3i is endv    
+
+mod PROVE-CUT-LIN is pr CUT-PROVING{Cut-Lin-G3i} . endm
+
+eof 

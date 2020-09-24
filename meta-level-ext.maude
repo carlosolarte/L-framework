@@ -1,0 +1,564 @@
+--- --------------------------------------------
+---Some extra functionalities for the meta-level
+--- --------------------------------------------
+    
+fmod META-LEVEL-EXT is
+    pr META-LEVEL .
+    pr LEXICAL .
+    pr CONVERSION .
+    pr QID .
+
+    --------------------------
+    var  Asg        : Assignment .
+    var  AS         : AttrSet .
+    var  Cond       : Condition .
+    var  C          : Constant .
+    var  GT         : GroundTerm .
+    var  M          : Module .
+    vars  N N'      : Nat .
+    var  NeTL       : NeTermList .
+    var  ODS        : OpDeclSet .
+    vars  Q Q'      : Qid .
+    var  QL         : QidList .
+    var  RT4        : Result4Tuple?  .
+    var  RT         : ResultTriple? .
+    var  R          : Rule .
+    vars  RS RS'    : RuleSet .
+    vars Sub Sub'   : Substitution .
+    vars T T'       : Term .
+    var T''         : Term .
+    vars TA TB      : Term .
+    vars TA' TB'    : Term .
+    vars TA'' TB''  : Term .
+    var hx          : Term .
+    vars TL TL'     : TermList .
+    vars GTL GTL'   : GroundTermList .
+    vars X Y        : Variable .
+    vars str str'   : String .
+    vars B B'       : Bool .
+    var Ty          : Type .
+    --------------------------
+
+    --- --------------------------
+    --- Misc
+    --- --------------------------
+
+    --- Concatenating 2 Qids
+    op concatenate : Qid Qid -> Qid .
+    eq concatenate(Q, Q')
+      = qid(string(Q) + string(Q')) .
+
+    op startsWith : Qid String -> Bool .
+    eq startsWith(Q, str)
+      = find(string(Q), str, 0) == 0 .
+
+    op substr : Qid Nat -> Qid .
+    ceq substr(Q, N)
+      = qid(substr(str, N, N'))
+      if str := string(Q) /\
+	  N' := length(str) .
+	    
+
+    --- Ading a sufix to all the variables in a term (to guarantee freshness)
+    op rename : Qid Term -> Term .
+    op renameL : Qid TermList TermList -> TermList .
+    eq rename(Q, C)
+      = C .
+    eq rename(Q, X)
+      = concatenate(
+	  concatenate(
+	    concatenate(getName(X), Q), ': ), getType(X)) .
+    
+    eq rename(Q, Q' [ NeTL ])
+      = Q' [ renameL(Q, NeTL, empty) ] .
+
+    eq renameL(Q, empty, TL)
+      = TL .
+    eq renameL(Q, (T, TL'), TL)
+      = renameL(Q, TL', (TL, rename(Q, T))) .
+    
+    --- --------------------------
+    --- Modules and Rules
+    --- --------------------------
+    
+    --- Returns a set of Qids with the name of the rules of a module
+    op ruleNames  : Module -> QidList .
+    op ruleNames$ : RuleSet QidList -> QidList .
+    eq ruleNames(M)
+     = ruleNames$(getRls(M), nil) .
+    eq ruleNames$(none, QL)
+     = QL .
+    eq ruleNames$((( rl T => T' [ label(Q) AS ]. ) RS), QL)
+     = ruleNames$(RS, QL Q) .
+    eq ruleNames$(( (crl  T => T' if Cond [ label(Q) AS ]. ) RS), QL)
+     = ruleNames$(RS, QL Q) .
+
+    --- Returns one of the rules of a module
+    op getRule : Qid Module -> Rule .
+    op getRule : Qid RuleSet -> Rule .
+    eq getRule(Q, M)
+     = getRule(Q, getRls(M)) .
+    eq getRule(Q, ((rl T => T' [ label(Q) AS ]. ) RS))
+     = rl T => T' [ label(Q) AS]. .
+    eq getRule(Q, ((crl  T => T' if Cond [ label(Q) AS ]. ) RS))
+	= crl T => T' if Cond [label(Q) AS]. .
+
+	--- Returns the inf (no-inductive measures) version of a rule
+    op getRuleInf : Qid Module -> Rule .
+    eq getRuleInf(Q, M)
+      =  getRule(concatenate('INF, Q) , M) .
+
+    --- Returns the head of a rule
+    op getHead : Qid Module -> Term .
+    op getHead : Rule -> Term .
+    eq getHead(Q, M)
+     = getHead(getRule(Q, M)) .
+    eq getHead((rl T => T' [ AS ].) )
+     = T .
+    eq getHead((crl T => T' if Cond [ AS ].) )
+	= T .
+      
+      --- Returns the right hand side of a rule
+    op getBody : Qid Module -> Term .
+    op getBody : Rule -> Term .
+    eq getBody(Q, M)
+      = getBody(getRule(Q, M)) .
+    eq getBody((rl T => T' [ AS ].) )
+     = T' .
+    eq getBody((crl T => T' if Cond [ AS ].) )
+     = T' .
+
+    --- Application of one rule in a term
+    op applyRule : Term Qid Module -> Term .
+    ceq applyRule(T, Q, M)
+      = if RT4 == failure then 'error.Goal else getTerm(RT4) fi
+      if RT4 := metaXapply(M, T, Q, none, 0, unbounded, 0) .
+
+    op applyRule : Term Qid Module Nat -> Term .
+    ceq applyRule(T, Q, M, N)
+      = if RT4 == failure then 'error.Goal else getTerm(RT4) fi
+      if RT4 := metaXapply(M, T, Q, none, 0, unbounded, N) .
+
+    --- Application of a rule under some substitution
+    op applyRule : Term Qid Module Substitution -> Term .
+    ceq applyRule(T, Q, M , Sub)
+      = if RT4 == failure then 'error.Goal else getTerm(RT4) fi
+      if RT4 := metaXapply(M, T, Q, Sub, 0, unbounded, 0) .
+
+    --- Applying a "new" rule in a Module
+    op applyRule : Term Rule Module -> Term .
+    op applyRule : Term Rule Module Substitution -> Term .
+    eq applyRule(T, R, M)
+      = applyRule(T, getName(R), project(M ,R)) .
+    eq applyRule(T, R, M, Sub)
+      = applyRule(T, getName(R), project(M ,R), Sub) .
+    
+
+    --- Application of one rule (generating the list of all possible matchings )
+    op applyRuleL  : Term Qid Module -> TermList .
+    op applyRuleL$ : Term Qid Module Nat TermList -> TermList .
+    eq applyRuleL(T, Q, M)
+     = applyRuleL$(T, Q, M, 0, empty) .
+   ceq applyRuleL$(T, Q, M, N, TL)
+     = if RT4 == failure
+       then TL
+       else applyRuleL$(T, Q, M, s(N), (getTerm(RT4),TL))
+       fi
+    if RT4 := metaXapply(M, T, Q, none, 0, unbounded, N) .
+
+    --- Returns the name of a rule
+    op getName : Rule -> Qid .
+    eq getName((rl T => T' [ label(Q) AS ]. ))
+     = Q .
+    eq getName((crl T => T' if Cond [ label(Q) AS ]. ))
+     = Q .
+      
+    --- Returns a module that is like M but replacing its rules with RS
+    op project : Module RuleSet -> Module .
+    eq project(M, RS)
+      =  (mod 'PRJ-MOD is
+	  getImports(M)
+    sorts getSorts(M) .
+    getSubsorts(M) getOps(M)
+    getMbs(M) getEqs(M) RS  endm) .
+    
+    --- Adds to M the rules Rls
+    op newModuleRls : Module RuleSet -> Module .
+    eq newModuleRls(M, RS)
+      = (mod 'INV-MOD is
+	  getImports(M)
+    sorts getSorts(M) .
+    getSubsorts(M) getOps(M)
+    getMbs(M) getEqs(M)
+      (getRls(M) RS) endm ) .
+
+    --- ------------------
+    --- Substitutions
+    --- ------------------
+    --- Lists of substitutions
+    sort SubList .
+    subsort Substitution < SubList .
+    op noneSL : -> SubList .
+    op _++_ : SubList SubList -> SubList [ctor assoc id: noneSL] .
+
+    --- Substitution on a term
+    op applyT : Term Assignment -> Term .
+    eq applyT(X, Y <- T)
+     = if (X == Y)
+       then T
+       else X
+       fi .
+    eq applyT(C, Y <- T)
+     = C .
+    eq applyT( (Q [ NeTL ]),  Asg)
+     = Q [ applyL(NeTL, Asg) ] .
+
+    --- Subsitution on a list of terms
+    op applyL  : NeTermList Assignment -> NeTermList .
+    op applyL$ : NeTermList Assignment NeTermList -> NeTermList .
+    eq applyL(TL, Asg)
+     = applyL$(TL, Asg, empty) .
+    eq applyL$(empty, Asg, TL')
+     = TL' .
+    eq applyL$((T, TL), Asg, TL')
+     = applyL$(TL, Asg, (TL', applyT(T, Asg))) .
+
+    --- General subsitution
+    op apply : Term Substitution -> Term .
+    eq apply(T, none)
+     = T .
+    eq apply(T, (Asg ; Sub))
+     = apply(applyT(T, Asg), Sub) .
+
+     --- Composing substitutions
+    op apply : Term Substitution Substitution -> Term .
+    eq apply(T, Sub, Sub')
+     = apply(apply(T, Sub), Sub') .
+ 
+    --- Transform fresh variables (of the shape #n:Type) into
+    --- constants Sets of formulas are named as "Delta", FNats as "n"
+    --- and formulas as "F"
+    op remove-first : Qid -> String .
+    ceq remove-first(Q) = substr(str,1,length(str))
+      if str := string(Q) .
+    
+    op name-it : Variable -> String .
+    ceq name-it(X) =
+	(if Q' == 'Formula then "\\FORMULA`{" + str + "`}"
+	  else (
+	    if Q' == 'MSFormula then "\\CTX`{" + str + "`}"
+	      else (if Q' == 'FNat then "\\HEIGHT`{" + str + "`}"
+
+		  else
+		    (if Q' == 'Prop then "\\PROP`{" + str + "`}"
+		      else 
+                        (if Q' == '?MSFormula then "\\CTXQ`{" + str + "`}"
+                          else 
+                            (if Q' == 'Nat then "\\NAT`{" + str + "`}"
+                             else 
+                                 (if Q' == 'BFormula then "\\BF`{" + str + "`}" else
+                                    (if Q' == 'MSBFormula then "\\MSBF`{" + str + "`}"  
+                                     else str 
+                                     fi )
+                                  fi
+                                 )
+                             fi)
+                        fi)
+		      fi)
+		    fi)
+		fi)
+	    fi)
+      if Q := getName(X) /\
+	  Q' := getType(X) /\
+	  str := remove-first(Q) .
+
+    --- pairs of (ground) terms and the constants in it
+    sort PairTC .
+    op pair-TC : TermList GroundTermList -> PairTC [ctor] .
+    
+    op toConstants : Term -> PairTC .
+    op toConstants : Term GroundTermList  -> PairTC .
+    eq toConstants(T) = toConstants(T, empty) .
+    --- Constant case
+    eq toConstants(C, GTL) = pair-TC(C, GTL) .
+    --- Variables (converted to constants)
+    ceq toConstants(X, GTL) = pair-TC(Q, (GTL , Q))
+      if Q := qid(name-it(X) + "."  + string(getType(X))) .
+    --- Constructors
+    ceq toConstants(Q [ NeTL ], GTL ) 
+      = pair-TC(Q [TL], (GTL' , GTL))
+      if pair-TC(TL, GTL') := toConstantsL(NeTL, empty) .
+    
+    --- List of terms
+    op toConstantsL  : NeTermList GroundTermList -> PairTC .
+    op toConstantsL$ : NeTermList NeTermList GroundTermList -> PairTC .
+    eq toConstantsL(TL, GTL)
+     = toConstantsL$(TL, empty, GTL) .
+    eq toConstantsL$(empty, TL', GTL)
+     = pair-TC(TL', GTL) .
+    ceq toConstantsL$((T, TL), TL', GTL)
+      = toConstantsL$(TL, (TL', T'), (GTL', GTL))
+      if  pair-TC(T', GTL') := toConstants(T, empty) .
+
+      --- Adding the new constants to the module
+    --- Building the new constants
+    op getNewOps  : GroundTermList -> OpDeclSet .
+    op getNewOps$ : GroundTermList OpDeclSet -> OpDeclSet .
+    eq getNewOps(GTL)
+     = getNewOps$(GTL, none) .
+    eq getNewOps$(empty, ODS)
+     = ODS .
+    eq getNewOps$( (C , GTL), ODS)
+     = getNewOps$(GTL, ODS ( op getName(C) : nil -> getType(C) [ctor] . )) .
+
+    --- Returning the new module
+    op newModule : Module OpDeclSet -> Module .
+    eq newModule(M, ODS)
+      = ( mod 'INV-EXT is getImports(M) sorts getSorts(M) . getSubsorts(M) (getOps(M) ODS) getMbs(M) getEqs(M) getRls(M) endm ) .
+
+    
+    --- -------------------
+    --- Unification
+    --- -------------------
+    --- left / right projections on the unification triple
+    op left : UnificationTriple -> Substitution .
+    op right : UnificationTriple -> Substitution .
+    eq left({ Sub, Sub', N })
+     = Sub .
+    eq right({ Sub, Sub', N })
+      = Sub' .
+    op nvar : UnificationTriple -> Nat .
+    eq nvar({ Sub, Sub', N })
+      = N .
+
+    --- -----------------------
+    --- Reachable states
+    --- -----------------------
+    
+    --- Tests if one term can be rewritten into another
+    op converges? : Term Term Module -> Bool .
+    eq converges?(T, T', M)
+     = metaSearch(M, T, T', nil, '*, unbounded, 0) =/= (failure).ResultTriple? .
+
+    --- Bounded version
+    op converges? : Term Term Module Nat -> Bool .
+    eq converges?(T, T', M, N)
+     =  metaSearch(M, T, T', nil, '*, N, 0) =/= (failure).ResultTriple? .
+
+    --- Tests if each of the term in the TermList can be rewritten in the second
+    op convergesL? : TermList Term Module -> Bool .
+    eq convergesL?(empty, T', M)
+     = true .
+    eq convergesL?( (T, TL), T', M)
+     = converges?(T, T', M) and-then convergesL?(TL, T', M) .
+
+    --- Bounded version
+    op convergesL? : Term Term Module Nat -> Bool .
+    eq convergesL?(empty, T', M, N)
+     = true .
+    eq convergesL?((T, TL ), T', M, N)
+      = converges?(T, T', M, N) and-then convergesL?(TL, T', M, N) .
+
+    --- -----------------------------
+    --- Labelling rules
+    --- -----------------------------
+    --- Given a module specifying a sequent system returns the module
+    --- containing the labelled (with height of detivation measures)
+    --- rules. It is assume that the input module only define (inference)
+    --- rules on sequents
+    op labelSeq : Module -> Module .
+    eq labelSeq(M) 
+      = ( mod 'LABELLED-MOD is
+	  getImports(M) sorts getSorts(M) .
+      getSubsorts(M) getOps(M)
+      getMbs(M)
+      getEqs(M)
+      labelRules(getRls(M),none)
+endm ) .
+    op labelRules : RuleSet RuleSet -> RuleSet .
+    eq labelRules(none, RS')
+      = RS' .
+    eq labelRules((R RS), RS')
+      = labelRules(  RS, (labelRule(R) RS')) .
+    op labelRule : Rule -> Rule .
+    --- Axiom case
+    eq labelRule( (rl TA =>
+	    'proved.Goal [ AS ]. ) )
+      = (rl '_:_['suc['hx:FNat], TA] =>
+	  'proved.Goal [ AS ]. ) .
+    --- Two premises
+    eq labelRule( (rl TA =>
+	    '_|_[TA' , TB']  [ AS ]. ) )
+      = (rl '_:_['suc['hx:FNat], TA] =>
+	  '_|_['_:_['hx:FNat, TA'], '_:_['hx:FNat, TB']] [ AS ]. ) .
+
+    --- One premise
+    eq labelRule( (rl TA => TA'  [ AS ]. ) )
+      = (rl '_:_['suc['hx:FNat], TA] =>
+	  '_:_['hx:FNat, TA'] [ AS ]. ) [owise] .
+    
+
+    --- Module with rules with and without (inf) measures
+    op labelSeqInf : Module -> Module .
+    eq labelSeqInf(M) 
+      = ( mod 'LABELLED-MOD is
+	  getImports(M) sorts getSorts(M) .
+      getSubsorts(M) getOps(M)
+      getMbs(M)
+      getEqs(M)
+      (labelRulesInf(getRls(M),none)
+	labelRules(getRls(M),none)
+	)
+    endm ) .
+
+    op labelRulesInf : RuleSet RuleSet -> RuleSet .
+    eq labelRulesInf(none, RS')
+      = RS' .
+    eq labelRulesInf((R RS), RS')
+      = labelRulesInf(  RS, (labelRuleInf(R) RS')) .
+    op labelRuleInf : Rule -> Rule .
+    --- Axiom case
+    eq labelRuleInf( (rl TA => 'proved.Goal [ label(Q) AS ]. ) )
+      = (rl '_:_['inf.INat, TA] => 'proved.Goal [ label(concatenate('INF, Q))  AS  ]. ) .
+    --- 2 premises case
+    eq labelRuleInf( (rl TA =>
+	    '_|_[TA', TB']  [ label(Q)  AS ]. ) )
+      = (rl '_:_['inf.INat, TA] =>
+	  '_|_['_:_['inf.INat, TA'],'_:_['inf.INat, TB']] [ label(concatenate('INF, Q))  AS ]. ) .
+    --- 1 premise case
+    eq labelRuleInf( (rl TA => TA'  [ label(Q) AS ]. ) )
+      = (rl '_:_['inf.INat, TA] => '_:_['inf.INat, TA'] [ label(concatenate('INF, Q)) AS ]. ) [owise] .
+    
+
+    --- Module with only unlabelled sequent
+    op labelNH : Module -> Module .
+    eq labelNH(M) 
+      = ( mod 'LABELLED-MOD is
+	  getImports(M) sorts getSorts(M) .
+      getSubsorts(M) getOps(M)
+      getMbs(M)
+      getEqs(M)
+      labelRulesInf(getRls(M),none)
+    endm ) .
+
+
+    --- Given a label of a rule returns the corresponding rule
+    --- preserving the height of the derivation
+    --- if the label includes $$0 or $$1, a projection on the left or
+    --- right premise is returned
+    --- the height is preserved)
+    op getInvRule : Qid  Module -> Rule .
+    op getInvRule : Qid  Module FindResult -> Rule .
+
+    eq getInvRule(Q, M) = getInvRule(Q, M , find(string(Q), "$$",0)) .
+    ceq getInvRule(Q, M, notFound) 
+     = rl '_:_[hx, T] => T' [ AS ]. 
+      if  rl '_:_['suc[hx], T] => T' [ AS ].  := getRule(Q, M) .
+
+    ceq getInvRule(Q, M, N) =
+      if substr(string(Q), N + 2, 1) == "0" then 
+	 (rl '_:_[hx, TA] => T [ AS ]. )
+	else
+	 (rl '_:_[hx, TA] => T' [ AS ]. )
+	fi
+      if  rl '_:_['suc[hx], TA] => '_|_[T, T'] [ AS ].  := getRule(qid(substr(string(Q), 0 ,N)), M) .
+
+    --- The same as getInvRule but it generates the rule with "unknown" height
+    op getInvRuleInf : Qid Module -> Rule .
+    ceq getInvRuleInf(Q, M)
+     = rl '_:_['inf.INat, T] => apply(T', hx <- 'inf.INat ) [ AS ]. 
+     if rl '_:_[hx, T] => T' [ AS ]. := getInvRule(Q, M) . 
+    
+    
+     --- -------------------------------
+    --- Results of some of the analyses
+    --- -------------------------------
+    sort Result .
+    op <_,_> : Bool String -> Result [ctor] .
+    op _+_ : Result Result -> Result .
+    eq < B , str > + < B' , str' >
+      = < B and B' , str + "\n" + str' > .
+    op emptyR : -> Result [ctor] .
+    eq emptyR = < true , "" > .
+
+    op print-output : Bool -> String .
+    eq print-output(true)
+      =  "[OK]" .
+    eq print-output(false)
+      =  "[Fail]" .
+
+    --- Printing the rules of a Module (useful to check the axioms
+    --- used in the proof of a theorem )
+    op print-ax : Module -> String .
+    op print-ax : Module RuleSet String -> String .
+    op print-rl : Module Rule -> String .
+    eq print-ax(M)
+      = print-ax(M, getRls(M), "\nAxioms assumed:\n") .
+    eq print-ax(M, none, str)
+      = str .
+    eq print-ax(M, (R RS), str)
+      = print-ax (M, RS, str + print-rl(M, R) ) .
+    eq print-rl(M, rl T => 'proved.Goal [ AS ]. )
+      = "\n" + printTokens(metaPrettyPrint(M, T, number mixfix))  .
+    eq print-rl(M, R)
+      = "" [owise] .
+
+    --- List of the rules with inductive measures
+    --- Returns a set of Qids with the name of the rules of a module
+    op ruleNamesFinite  : Module -> QidList .
+    op ruleNamesFinite$ : RuleSet QidList -> QidList .
+    eq ruleNamesFinite(M)
+     = ruleNamesFinite$(getRls(M), nil) .
+    eq ruleNamesFinite$(none, QL)
+     = QL .
+    eq ruleNamesFinite$((( rl T => T' [ label(Q) AS ]. ) RS), QL)
+     = ruleNamesFinite$(RS, QL if startsWith(Q, "INF") then nil else Q fi) .
+    eq ruleNamesFinite$(( (crl  T => T' if Cond [ label(Q) AS ]. ) RS), QL)
+	= ruleNames$(RS, QL if startsWith(Q, "INF") then nil else Q fi) [owise] .
+
+    --- Check if the subformulas are indeed formulas. For instance,
+    --- for a proposition p(n) where n is a nat, n is not a formula
+    op isFormula : GroundTerm -> Bool .
+    eq isFormula(C) = getType(C) == 'Formula or getType(C) == 'Prop .
+    eq isFormula(GT) = false [owise] .
+
+    --- Returning the number of premises of a sequent rule
+    --- Only 1,2 premise rules are considered.
+    op numPremises : Rule -> Nat .
+    eq numPremises( rl T => 'proved.Goal [ AS ]. ) = 0 .
+    eq numPremises(rl T => '_:_[T', T''] [ AS ].) = 1 .
+    eq numPremises(rl T => '_|_[T', T''] [ AS ].) = 2 .
+
+    --- Extracting the height of a derivation
+    op getHeight : Term -> Term .
+    eq getHeight('_:_[T, T']) = T .
+
+    --- Extracting the height of a derivation and substracting one
+    --- Note that this function is only defined for sequents of the
+    --- shape suc(x) : Seq. This guarantees that calls to getHeghtPred
+    --- on "zero" will halt
+    op getHeightPred : Term -> Term .
+    eq getHeightPred('_:_['suc[T], T']) = T .
+
+
+    --- Given a term representing a ground sequent returns
+    --- the list of sequents after one step of rewriting with the rules
+    op one-step : Module GroundTerm -> GroundTermList .
+    op one-step : Nat Module GroundTerm GroundTermList -> GroundTermList .
+    eq one-step(M, GT)
+     = one-step(0, M, GT, empty) .
+
+    ceq one-step(N, M, GT, GTL)
+    = 
+      if RT == (failure).ResultTriple? 
+      then GTL
+      else one-step(s(N), M, GT, (getTerm(RT), GTL))
+      fi
+    if  RT := metaSearch(M, GT, 'G$$:Goal, nil, '+, 1, N) .
+
+    --- Generating a fresh variable of the form %n:Type
+    op newVar : Nat Type -> Variable .
+    eq newVar(N, Ty) =
+        qid("%" + string(N,10) + ":" + string(Ty)) .
+
+endfm

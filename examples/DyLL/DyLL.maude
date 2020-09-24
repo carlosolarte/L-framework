@@ -1,0 +1,103 @@
+--- Dyadic system for linear logic
+
+load ../../admissibility .
+load ../../invertibility .
+
+mod LL is
+    ex SEQUENT-SOLVING .
+    
+    --- Atomic Propositions
+    op p : Nat -> Prop [ctor] .
+    op perp : Nat -> Prop .
+    --- eq (A:Prop perp) perp  = A:Prop .
+
+    --- units
+    op 1 : -> Formula [ctor] .
+    op 0 : -> Formula [ctor] .
+    op bot : -> Formula [ctor] .
+    op top : -> Formula [ctor] .
+    
+    --- Connectives
+    op _**_ : Formula Formula -> Formula [ctor prec 25] . *** tensor
+    op _$_ : Formula Formula -> Formula [ctor prec 25] . *** par (for Classical LL)
+    op _&&_ : Formula Formula -> Formula [ctor prec 30] . *** with
+    op _o_ : Formula Formula -> Formula [ctor prec 30] . *** oplus
+
+    --- Exponentials 
+    op !_ : Formula -> Formula [ctor prec 20] .
+    op ?_ : Formula -> Formula [ctor prec 20] .
+
+    op dual : Formula -> Formula .
+    eq dual(1) = bot .
+    eq dual(bot) = 1 .
+    eq dual(top) = 0 .
+    eq dual(0) = top .
+    eq dual(F ** G) = dual(F) $ dual(G) .
+    eq dual(F $ G) = dual(F) ** dual(G) .
+    eq dual(F && G) = dual(F) o dual(G) .
+    eq dual(F o G) = dual(F) && dual(G) .
+    eq dual(p(i)) = perp(i) .
+    eq dual(perp(i)) = p(i) .
+    eq dual(! F) = ? dual(F) .
+    eq dual(? F) = ! dual(F) .
+      
+
+    eq TEXReplacement =
+	('|--< |-> '\vdash\bopen),
+	('> |-> '\bclose),
+	('perp |-> '\llperp),
+	('** |-> '\tensor) , ('$ |-> '\lpar) ,
+	('&& |-> '\with) , ('o |-> '\oplus) ,
+	('; |-> '`, ),
+	(': |-> '\wspace ),
+	('1 |-> '\one), ('0 |-> '\zero),
+	('bot |-> '\bot), ('top |-> '\top),
+	('! |-> '\bang), ('quest |-> '\quest),
+	('GW |-> 'G_W)
+    .
+    
+    eq TEXReplacementSeq =
+	('init1 |-> 'I_1),
+	('init2 |-> 'I_2),
+	('init3 |-> 'I_3),
+	('bot |-> '\bot),
+	('top |-> '\top),
+	('par |-> '\lpar),
+	('with |-> '\with),
+	('quest |-> '\quest),
+	('copy |-> '\questC),
+	('bang |-> '\bang),
+	('one |-> '\one),
+	('tensor |-> '\tensor),
+	('plusA |-> '\plusA),
+	('plusB |-> '\plusB),
+	('height |-> '\heightRule)
+    .
+
+    --- Fresh constant for weakening lemmas
+    op GW : -> Formula .
+    
+    --- vars A B : Prop .
+    vars F G F' G' : Formula .
+    vars CC CL CL' : MSFormula .
+    var i : Nat .
+
+    --- Dyadic sequents
+    op |--<_>_ : MSFormula MSFormula -> Sequent [ctor] .
+
+    rl [init1] : |--< CC ; p(i)> perp(i) => proved .
+    rl [init2] : |--< CC ; perp(i)> p(i) => proved .
+    rl [init3] : |--< CC > p(i) ; perp(i) => proved .
+    rl [bot] : |--< CC > CL ; bot => |--< CC > CL .
+    rl [top] : |--< CC > CL ; top => proved .
+    rl [par] : |--< CC > CL ; F $ F' => |--< CC > CL ; F ; F' . 
+    rl [with] : |--< CC > CL ; G && G' => (|--< CC > CL ; G) | (|--< CC > CL ; G') . 
+    rl [one] : |--< CC > 1 => proved .
+    rl [tensor] : |--< CC > CL ; CL' ;  G ** G' =>  (|--< CC > CL ; G) | (|--< CC > CL' ; G') .
+    rl [plusA] : |--< CC > CL ; G o G' => |--< CC > CL ; G .
+    rl [plusB] : |--< CC > CL ; G o G' => |--< CC > CL ; G' .
+
+    rl [quest] : |--< CC > CL ; ? F => |--< CC ; F > CL .
+    rl [copy] : |--< CC ; F > CL => |--< CC ; F > CL ; F .
+    rl [bang] : |--< CC > ! G => |--< CC > G .
+endm

@@ -1,0 +1,62 @@
+load ../../cut-elimination-base .
+--- This procedure checks for cut-elimination for 1-sided system and
+--- the cut-rule multiplicative for dyadic systems. This is the case
+--- of the classical cut-rule
+    
+mod CUT-PROVING{SPEC :: CUT-SPEC} is
+    pr CUT-BASE{SPEC} .
+
+    ----------------------------
+    var  M M'           : Module .
+    vars Q Q'           : Qid .
+    var Ans             : Trace? .
+    vars gtc gtc'       : GroundTerm .
+    vars gtp gtp'       : GroundTerm .
+    var GTGoal          : GroundTerm .
+    var  RS             : RuleSet .
+    vars GTA GTB        : GroundTerm .
+    var GF              : GroundTerm .
+    vars gh gh'         : GroundTerm .
+    ----------------------------
+
+    eq cut-rule =
+	( rl '_:_['inf.INat,  '|--<_>_['Gamma$$:MSFormula, 'Delta$$:MSFormula]] =>
+	'_|_['_:_['h1$$:FNat, '|--<_>_['Gamma$$:MSFormula, '!_['FCut$$:Formula]]],
+	     '_:_['h2$$:FNat, '|--<_>_['_;_['dual['FCut$$:Formula], 'Gamma$$:MSFormula], 'Delta$$:MSFormula]]]
+	  [ label('\Cut) ]. ) .
+
+    --- Solving the case with the needed hypotheses
+    ceq holds$?(Q, Q', cut-case(
+	    M,
+	    cut-sub-case(gtc, gtp),
+	    cut-sub-case(gtc', gtp'),
+	    GTGoal,
+	    GF)) 
+      = result(M', Q, Q', GTGoal, gtc, gtp, gtc', gtp', Ans)
+      if
+	  --- Premises
+	  RS := premises(gtc) premises(gtc')
+	  premises(gtp) premises(gtp')
+	  --- invertibility lemmas on the premises
+	  inv-premises(M, inv-rules, gtp) inv-premises(M, inv-rules,  gtp')
+	  already-proved-theorems
+	  --- Induction on the height of the derivation
+	  induct-height(getHeight(gtc), getHeight(gtc'), GF)
+	  --- No structural induction is needed here
+          --- Mutual induction on the ![GTA] formula
+          mutual-induct(GF) 
+	  /\ M' := newModuleRls(M, RS) 
+	  /\  Ans := metaSearchPath(M', GTGoal, upTerm(proved), nil, '*, bound-spec, 0) .
+
+
+    --- The parameter is the formula and the cut-formula is
+    --- ![GTA]. Hence, induction on the smaller formula GTA is valid
+    op mutual-induct : GroundTerm -> RuleSet .  
+    eq mutual-induct(GTA) =
+	( rl '_:_['inf.INat,   '|--<_>_['Gamma$$:MSFormula, 'Delta$$:MSFormula]] =>
+	  '_|_['_:_['inf.INat, '|--<_>_['Gamma$$:MSFormula, GTA]],
+	       '_:_['inf.INat, '|--<_>_['Gamma$$:MSFormula,'_;_['dual[GTA], 'Delta$$:MSFormula]]]]
+	  [ label('\mCut) ]. ) .
+
+
+endm

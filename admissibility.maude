@@ -1,0 +1,272 @@
+--- -----------------------
+--- Admissibility of rules
+--- -----------------------
+
+
+***(
+
+Consider the rule R with conclusion S and premise S'
+
+  S'
+===== R
+  S
+
+If S' is provable with height at most n implies that  S is also provable with
+height almost n, then, R is admissible. 
+    
+This file defines procedures for checking admissibility of structural rules in
+sequent systems. The entry point is the theory ADMISSIBILITY-SPEC that
+specifies the name of the module to be analyzed as well as the already proved
+theorems that can be used during the proof (e.g., other admissible rules). 
+
+The theory ADMISSIBILITY-ALG implements the algorithm. Cases are generated
+using unification and they are discarded by using metaSearch. More details on
+the algorithm in the definition of the Module.
+
+)
+
+    
+load theorem-proving-base .
+
+--- -------------------------------------------
+--- Specification of the system to be analyzed
+--- -------------------------------------------
+fth ADMISSIBILITY-SPEC is
+    pr META-LEVEL .
+    --- Name of the theorem
+    op th-name : -> String .
+    --- Name of the module with the object-logic description
+    op mod-name : -> Qid .
+
+    --- Specification of the rule to be proved admissible. It should
+    --- be written in the formal goal => premise
+    --- Rules must have only one premise. 
+    op rule-spec : -> Rule .
+
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+
+    --- File name to write the output
+    op file-name : -> String .
+
+    --- Already height preserving invertibility lemmas
+    --- Use the name of the rule in case of one-premise rules or two
+    --- premises (and both are invertible) (e.g, 'andR). If the rule
+    --- has two premises, it is possible to choose only one of the
+    --- premises as invertible, e.g., ('ImpL$$1). $$1 denotes the
+    --- right premise and $$0 the left premise
+    op inv-rules : -> QidList .
+
+    --- Mutual Inductive (For mutual induction proofs). This should be
+    --- the specification of the other rule induction on shorter
+    --- derivations
+    op mutual-ind : GroundTerm -> RuleSet .
+
+    --- already proved theorems (other admissible rules)
+    op already-proved-theorems : -> RuleSet .
+
+endfth
+
+mod ADMISSIBILITY-ALG{SPEC :: ADMISSIBILITY-SPEC} is
+    pr THEOREM-PROVING-BASE .
+
+    -------------------------------------------
+    vars  M M'           : Module .
+    var  N               : Nat .
+    vars Q Q'            : Qid .
+    var  R               : Rule .
+    var  RS              : RuleSet .
+    vars T T'            : Term .
+    vars TC TP           : Term .
+    var GX               : Term .
+    vars GTC GTP         : GroundTerm .
+    var gh               : GroundTerm .
+    var GG               : GroundTerm .
+    var  LGT             : GroundTermList .
+    var  UT              : UnificationTriple? .
+    var Ans              : Trace? .
+    var str              : String .
+    var B                : Bool .
+    var adc              : Adm-Case .
+    var AS               : AttrSet .
+    var Res              : Result .
+    -------------------------------------------
+
+    --- ===========================
+    --- Parameters of the analysis.  
+    --- ===========================
+    op module : -> Module .
+    eq module = labelSeq(upModule(mod-name, false )) .
+    
+    --- ----------------------------
+    --- Cases
+    --- ----------------------------
+
+    --- Cases correspond to the term that unifies the body/premise of the rule to
+    --- be proved admissible and the head of the rule in the system.  The first
+    --- parameter is the conclusion (the unified term) and the second the premises
+    --- after the application of the rule. The last parameter correspond to the
+    --- goal to be proved (the conclusion of the rule to be proved admissible)
+
+    sort Adm-Case .
+    op adm-case : Qid Term Term Term  -> Adm-Case [ctor] .
+    --- The case after changing variables with fresh constants
+    op adm-case : Qid Module GroundTerm GroundTerm GroundTerm  -> Adm-Case [ctor] .
+    op no-case : -> Adm-Case [ctor] .
+
+    --- =========================
+    --- Generating Cases
+    --- =========================
+    --- This procedures uses the N-th unifier between the premise of
+    --- rule-spec and the conclusion of the rule identified with Q.
+    
+    op generate-cases : Nat  Qid -> Adm-Case .
+    ceq generate-cases(N, Q)
+      = if UT == (noUnifier).UnificationTriple?
+	    then no-case
+	    else adm-case(
+	        Q,
+	        apply(T, left(UT)),
+	        applyRule(apply(T, left(UT)), Q, module, right(UT)), --- applying rule Q
+	        apply(getHead(rule-spec), left(UT)) )   --- Applying rule rule-spec
+	    fi
+      if T  := getBody(rule-spec) /\ 
+	  UT := metaVariantDisjointUnify(module, getBody(rule-spec) =? getHead(Q, module), empty, 0, N)
+	  .
+      
+    --- =============================
+    --- The admissibility algorithms
+    --- =============================
+    
+    --- ----------------------
+    --- Inductive Hypothesis
+    --- ----------------------
+
+    --- The parameter is the height of the derivation and hence,
+    --- rule-spec is instantiated with a (fixed) shorter derivation
+    op inductive : GroundTerm -> Rule .
+    ceq inductive('suc[gh])
+      =
+	(rl '_:_[gh, T] => '_:_[gh, T'] [ label('\IH) ].)
+      if (rl '_:_['n:FNat, T] => '_:_['n:FNat, T'] [ AS ].) := rule-spec .
+
+    ceq inductive('suc['suc[gh]])
+      =
+	(rl '_:_['suc[gh], T] => '_:_[gh, T'] [ label('\IH) ].)
+      if (rl '_:_['suc['n:FNat], T] => '_:_['n:FNat, T'] [ AS ].) := rule-spec .
+
+    eq inductive(gh) = none [owise] .
+
+    --- ----------------------
+    --- Checking admissibility 
+    --- ----------------------
+    op holds? : Qid -> Result . --- First goal
+    op holds? : Nat Qid Result -> Result . --- Number of unifiers
+    op holds? : Adm-Case -> Result . --- Ground and non-ground case
+    
+    --- Q is the name of the rule to be tested against rule-spec
+    eq holds?(Q)
+      = holds?(0, Q, emptyR) .
+
+    --- Generating different cases for each unifier N
+    ceq holds?(N,  Q, Res) 
+      = if adc == no-case
+	    then Res
+	    else holds?(s(N),  Q, Res + holds?(adc))
+	    fi
+      if adc := generate-cases(N, Q) .
+
+    --- The current case is a non ground terms that need to be "frozen" to
+    --- constants
+    ceq holds?(adm-case(Q, TC, TP, GX))
+      = holds?(adm-case(Q, M, GTC, GTP, GG))
+      if
+	  --- 'join is used only to build a term with the conclusion and the premises
+	  pair-TC('join[GTC, GTP, GG], LGT) := toConstants('join[TC, TP, GX])
+	  --- M is the module extended with the constants 
+	  /\ M := newModule(module, getNewOps(LGT)) .
+      
+
+      --- The terms are already ground terms. M is the module extended
+      --- with the fresh constants
+      --- We are assuming a derivation GTC / GTP (conclusion /
+      --- premises) and GG is the goal to be proved.
+    ceq holds?(adm-case(Q, M, GTC, GTP, GG))
+      =
+      if Ans == failure
+	then < false ,
+	  "\n\\reductionFail{" +
+	    string(M', Q,  GTC, GTP) + "}{" +
+	    string-fail(M, GG) + "}\n \\begin{lstlisting}\n" +  print-ax(M') + "\\end{lstlisting}" >
+	else < true ,
+	  "\\[\n\\reduction{" + string(M', Q,  GTC, GTP) + "}\n{" +  output(M', Ans)  + "}\\]\n" >
+	fi
+      if
+	  --- Adding the inductive hypothesis as well as the premises of the application of the rule
+	  M' := newModuleRls(M, inductive(getHeight(GG))
+	    premises(GTP) mutual-ind(getHeight(GG))
+	    inv-premises(M, inv-rules, GTP) already-proved-theorems ) /\
+	  Ans := metaSearchPath(M', GG, upTerm(proved), nil, '*, bound-spec, 0) .
+endm
+
+
+--- ---------------------------------------------------------------
+--- Protocol calling the needed functions and output of the result
+--- ---------------------------------------------------------------
+mod ADMISSIBILITY-THEOREM{SPEC :: ADMISSIBILITY-SPEC} is
+    extending ADMISSIBILITY-ALG{SPEC} .
+
+    --- -----------------------------
+    var Res              : Result .
+    vars Q Q'            : Qid .
+    vars  QL QL'         : QidList .
+    var B                : Bool .
+    vars txt txt'        : String .
+    --- -----------------------------
+    
+    op cpr : -> Cid .
+    op opr : -> Oid .
+    op ocase : -> Oid . 
+    op out:_ : Result -> Attribute .
+    ops cases:_ : QidList -> Attribute .
+    op case:_ : Qid -> Attribute .
+    ops ready busy : -> Attribute .
+    op wait-print:_ : Bool -> Attribute .
+    op prove-it : -> Configuration .
+    
+    rl prove-it =>
+	<>
+	Println("Proof of " + th-name + "\n*************************************************")
+	  < opr : cpr | ready,
+			out: (< true , 
+			  "\\section{" + th-name + "}\n" +
+			  "\\begin{itemize}\n" > ) ,
+	  cases: ruleNames(module) > .
+
+    rl < opr : cpr | ready, out: Res, cases: (Q QL) > =>
+	Print("Proving the case " + string(Q) )
+	< opr : cpr | busy, out: Res, cases: (QL) >
+	< ocase : cpr | busy, case: Q > .
+
+    crl < ocase : cpr | busy, case: Q >
+	< opr : cpr | busy, out: Res, cases: (QL) >
+      =>
+	< opr : cpr | wait-print: B, out: (
+			Res +
+			< B , 
+			"\n\\item Case(s) rule $" +
+			string(ruleName(module,Q)) + "$\n"
+			+ txt' >
+	  ), cases: (QL) >
+      if < B , txt' > := holds?( Q) .
+
+    rl < opr : cpr | wait-print: B, out: Res, cases: (QL) >
+      => Println("\t......\t" + print-output(B))
+	< opr : cpr | ready, out: Res, cases: (QL) > .
+
+    rl < opr : cpr | ready, out: < B , txt >, cases: nil > =>
+	Println("Done! ....... \t" )
+	Println("Output: " + file-name) 
+	Write(txt + "\n\\end{itemize}", file-name, "w+") .
+
+endm

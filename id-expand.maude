@@ -1,0 +1,219 @@
+--- -----------------------
+--- Identity expansion
+--- -----------------------
+
+***(
+Proving the identity expansion theorem for object logics.  The OL must provide
+the goal to be proved given a ground term denoting a formula: in two-sided
+sequents it must be F |-- F while, in one-sided sequents it should be |-- F,
+dual(F)
+
+The TypeList is the list of types to be considered as constructors of formulas.
+The type 'Formula is always considered. Other types may include, e.g.,
+'BFormula for boxed formulas in modal systems (see example/K)
+
+)
+    
+load theorem-proving-base .
+
+--- -------------------------------------------
+--- Specification of the system to be analyzed
+--- -------------------------------------------
+fth ID-EXP-SPEC is
+    pr META-LEVEL .
+    --- Name of the module with the object-logic description
+    op mod-name : -> Qid .
+    --- File name to write the output
+    op file-name : -> String .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    --- Goal to be proved ( F |-- F,  |- F, dual(F), etc)
+    op goal : GroundTerm -> GroundTerm .
+    --- already proved theorems
+    op already-proved-theorems : -> RuleSet .
+    --- types different from 'Formula to be analyzed
+    op types-formula : -> TypeList .
+
+endfth
+
+mod ID-EXP-ALG{SPEC :: ID-EXP-SPEC} is
+    pr THEOREM-PROVING-BASE .
+
+    -------------------------------------------
+    vars  M M'           : Module .
+    var  N               : Nat .
+    vars Q Q'            : Qid .
+    var  R               : Rule .
+    var  RS              : RuleSet .
+    vars TC TP           : Term .
+    vars GTC GTP         : GroundTerm .
+    var GG               : GroundTerm .
+    var  LGT             : GroundTermList .
+    var Ans              : Trace? .
+    var B                : Bool .
+    var AS               : AttrSet .
+    var Res              : Result .
+    var OPs              : OpDeclSet .
+    var OP               : OpDecl .
+    var Typs             : TypeList .
+    var Ty               : Type .
+    -------------------------------------------
+
+    --- ===========================
+    --- Parameters of the analysis.  
+    --- ===========================
+    op module : -> Module .
+    eq module = labelSeqInf(upModule(mod-name, false )) .
+    
+    --- ----------------------------
+    --- Cases
+    --- ----------------------------
+    --- We only need the formula to be proved
+    sorts ID-Case ID-Cases .
+    subsort ID-Case < ID-Cases .
+    op id-case : Term  -> ID-Case [ctor] .
+    --- The case after changing variables with fresh constants
+    op id-case : Module GroundTerm -> ID-Case [ctor] .
+
+    --- A list of cases
+    op no-case : -> ID-Cases [ctor] .
+    op _;;_ : ID-Cases ID-Cases -> ID-Cases [ctor assoc id: no-case] .
+
+    --- =========================
+    --- Generating Cases
+    --- =========================
+    
+    op generate-cases : -> ID-Cases .
+    op generate-cases : OpDeclSet -> ID-Cases .
+    eq generate-cases = generate-cases(getOps(module)) .
+    eq generate-cases(none) = no-case .
+    eq generate-cases((OP OPs)) = generate-cases(OPs) ;; case(OP) .
+
+
+    --- Deciding if the type of the constructor needs to be considered
+    op valid-type : Type -> Bool .
+    eq valid-type('Formula) = true .
+    eq valid-type(Ty) = occurs(Ty, types-formula) [owise] .
+
+
+    op case : OpDecl -> ID-Cases .
+
+    eq case((op Q : Typs -> Ty [AS ctor]. )) =
+        if valid-type(Ty)
+        then
+          if Typs == nil  
+         --- constant case
+          then id-case( qid(string(Q) + "." + "Formula"))
+          --- Composed formulas
+          else id-case(Q[ build-formula(0, Typs) ]) 
+          fi
+        else no-case 
+        fi .
+
+    eq case(OP) = no-case [owise] . --- no constructor
+
+    op build-formula : Nat TypeList -> TermList .
+    eq build-formula(N, nil) = empty .
+    eq build-formula(N, (Ty Typs)) 
+      = newVar(N, Ty)  , build-formula(s(N) , Typs) .
+
+      --- =============================
+      --- The ID-Exp algorithm
+      --- =============================
+
+      --- Induction is simply proving the goal on proper subterms
+    op inductive : GroundTerm -> RuleSet .
+    op $inductive : GroundTermList -> RuleSet .
+    eq inductive(Q[LGT])
+     = $inductive(LGT) .
+    eq inductive(GG) = none [owise] .
+
+    eq $inductive(empty) = none .
+    eq $inductive( (GG, LGT))
+     = $inductive(LGT)
+       if getType(GG) == 'Formula
+       then (rl goal(GG) => 'proved.Goal [label('\IH)]. )
+       else none
+       fi .
+   
+
+    op holds? : ID-Case -> Result .
+
+      --- The current case is a non ground terms that need to be "frozen" to
+      --- constants
+    ceq holds?(id-case(TC))
+      = holds?(id-case(M, GG))
+      if
+	  --- 'join is used only to build a term with the conclusion and the premises
+	  pair-TC(GG, LGT) := toConstants(TC)
+	  --- M is the module extended with the constants 
+	  /\ M := newModule(module, getNewOps(LGT)) .
+      
+
+      --- The ground term case
+    ceq holds?(id-case(M, GG))
+      =
+      if Ans == failure
+	then < false , "\\[" + string-fail(M', GTC) + "\\]" >
+	else < true , "\\[" + output(M', Ans) + "\\]" >
+	fi
+      if
+      GTC := goal(GG) /\
+	  M' := newModuleRls(M, inductive(GG) already-proved-theorems) /\
+	  Ans := metaSearchPath(M', GTC, upTerm(proved), nil, '*, bound-spec, 0) .
+endm
+
+--- ---------------------------------------------------------------
+--- Protocol calling the needed functions and output of the result
+--- ---------------------------------------------------------------
+mod ID-EXP-THEOREM{SPEC :: ID-EXP-SPEC} is
+    extending ID-EXP-ALG{SPEC} .
+
+    --- -----------------------------
+    var Res              : Result .
+    var B                : Bool .
+    vars txt txt'        : String .
+    var id-c             : ID-Case .
+    var id-cs            : ID-Cases .
+    --- -----------------------------
+    
+    op cpr : -> Cid .
+    op opr : -> Oid .
+    op ocase : -> Oid . 
+    op out:_ : Result -> Attribute .
+    ops cases:_ : ID-Cases -> Attribute .
+    op case:_ : ID-Case -> Attribute .
+    ops ready busy : -> Attribute .
+    op wait-print:_ : Bool -> Attribute .
+    op prove-it : -> Configuration .
+    
+    rl prove-it =>
+	<>
+	Println("Identity expansion" + 
+    "\n*************************************************")
+	  < opr : cpr | ready,
+			out: (< true , 
+              "\\section{Identity-Expansion}" >) ,
+	  cases: generate-cases > .
+
+    rl < opr : cpr | ready, out: Res, cases: (id-c ;;  id-cs) > =>
+	< opr : cpr | busy, out: Res, cases: (id-cs) >
+	< ocase : cpr | busy, case: id-c > .
+
+    crl < ocase : cpr | busy, case: id-c >
+	< opr : cpr | busy, out: Res, cases: (id-cs) >
+      =>
+	< opr : cpr | ready, out: (
+			Res +
+			< B , "\n " + txt' >
+	  ), cases: (id-cs) >
+      if < B , txt' > := holds?(id-c) .
+
+
+    rl < opr : cpr | ready, out: < B , txt >, cases: no-case > =>
+	Println("Done! ....... \t" +
+	if B then "[All cases proved]" else "[Some cases failed!]" fi
+	  )
+	Println("Output: " + file-name) 
+	Write(txt + "\n", file-name, "w+") .
+endm

@@ -1,0 +1,81 @@
+--- One-sided system for MALL (multiplicative additive linear logic)
+
+load ../../admissibility .
+load ../../invertibility .
+
+mod MALL is
+    	ex SEQUENT-SOLVING .
+    
+    --- Atomic Propositions
+    op p : Nat -> Prop [ctor] .
+    op perp : Nat -> Prop .
+    --- eq (A:Prop perp) perp  = A:Prop .
+
+    --- units
+    op 1 : -> Formula [ctor] .
+    op 0 : -> Formula [ctor] .
+    op bot : -> Formula [ctor] .
+    op top : -> Formula [ctor] .
+    
+    --- Connectives
+    op _**_ : Formula Formula -> Formula [ctor prec 25] . *** tensor
+    op _$_ : Formula Formula -> Formula [ctor prec 25] . *** par (for Classical LL)
+    op _&&_ : Formula Formula -> Formula [ctor prec 30] . *** with
+    op _o_ : Formula Formula -> Formula [ctor prec 30] . *** oplus
+
+    op dual : Formula -> Formula .
+    eq dual(1) = bot .
+    eq dual(bot) = 1 .
+    eq dual(top) = 0 .
+    eq dual(0) = top .
+    eq dual(F ** G) = dual(F) $ dual(G) .
+    eq dual(F $ G) = dual(F) ** dual(G) .
+    eq dual(F && G) = dual(F) o dual(G) .
+    eq dual(F o G) = dual(F) && dual(G) .
+    eq dual(p(i)) = perp(i) .
+    eq dual(perp(i)) = p(i) .
+    
+
+    eq TEXReplacement =
+	('|-- |-> '\vdash),
+	('perp |-> '\llperp),
+	('** |-> '\tensor) , ('$ |-> '\lpar) ,
+	('&& |-> '\with) , ('o |-> '\oplus) ,
+	('; |-> '`, ),
+	(': |-> '\wspace ),
+	('1 |-> '\one), ('0 |-> '\zero),
+	('bot |-> '\bot), ('top |-> '\top),
+	('GW |-> 'G_W)
+    .
+    
+    eq TEXReplacementSeq =
+	('bot |-> '\bot),
+	('top |-> '\top),
+	('par |-> '\lpar),
+	('with |-> '\with),
+	('one |-> '\one),
+	('init |-> 'I),
+	('tensor |-> '\tensor),
+	('plusA |-> '\plusA),
+	('plusB |-> '\plusB)
+    .
+
+    --- Fresh constant for weakening lemmas
+    op GW : -> Formula .
+    
+    --- vars A B : Prop .
+    vars F G F' G' : Formula .
+    vars CL CL' : MSFormula .
+    var i : Nat .
+
+    rl [init] : |-- p(i) ; perp(i) => proved .
+    rl [bot] : |-- CL ; bot => |-- CL . 
+    rl [top] : |-- CL ; top => proved .
+    rl [par] : |-- CL ; F $ F' => |-- CL ; F ; F' . 
+    rl [with] : |-- CL ; G && G' => (|-- CL ; G) | (|-- CL ; G') . 
+    rl [one] : |-- 1 => proved .
+    rl [tensor] : |-- CL ; CL' ;  G ** G' =>  (|-- CL ; G) | (|-- CL' ; G') .
+    rl [plusA] : |-- CL ; G o G' => |-- CL ; G .
+    rl [plusB] : |-- CL ; G o G' => |-- CL ; G' .
+
+endm

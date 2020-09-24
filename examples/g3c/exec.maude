@@ -1,0 +1,32 @@
+--- Executing all the analysis 
+set show advisories off .
+set show command off .
+
+load g3c .
+load prop-WH .
+load prop-inv .
+load prop-C .
+load prop-cut .
+load prop-ID .
+
+--- Weakening on the left and right 
+erew in PROVE-W : prove-it .
+erew in PROVE-WR : prove-it .
+
+--- Height of derivations
+erew in PROVE-HEIGHT : prove-it .
+    
+--- Invertibility lemmas
+erew in PROVE-INV : prove-it .
+
+--- Admissibility of contraction on the right and left
+erew in PROVE-C : prove-it .
+erew in PROVE-CR : prove-it .
+
+--- Identity expansion
+erew in PROVE-ID : prove-it .
+
+--- Cut-elimination
+erew in PROVE-CUT : prove-it .
+
+quit .

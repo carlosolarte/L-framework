@@ -1,0 +1,50 @@
+--- Definition of the following properties:
+--- - If S is provable with height n then it is proved with height s(n)
+
+    --- ---------------------------------------------------------
+    --- Height of derivations
+    --- Theorem: if n : Gamma |- Delta then s(n) : Gamma |- Delta
+    --- ---------------------------------------------------------
+
+
+fmod ADMISSIBILITY-HEIGHT is
+    pr META-LEVEL .
+
+    op th-name : -> String .
+    eq th-name = "Measure of derivations" .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+
+    vars GT GT' GT'' : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['suc['n:FNat],  '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula]] =>
+	  '_:_['n:FNat, '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula ]]
+	  [ label('H) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "height.tex" .
+
+    --- Invertibility is not needed for these theorems
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction is needed in this case
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT) = none .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = none .
+
+endfm
+
+view Admissibility-Height from ADMISSIBILITY-SPEC to ADMISSIBILITY-HEIGHT is endv    
+
+mod PROVE-HEIGHT is pr  ADMISSIBILITY-THEOREM{Admissibility-Height} . endm
+

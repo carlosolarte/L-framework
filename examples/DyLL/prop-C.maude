@@ -1,0 +1,44 @@
+--- Contraction on the classical context
+
+
+fmod ADMISSIBILITY-C is
+    pr META-LEVEL .
+
+    op th-name : -> String .
+    eq th-name = "Contraction on the classical context" .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+
+    vars GT GT' GT'' : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['n:FNat,  '|--<_>_['_;_['Gamma:MSFormula, 'FC:Formula], 'Delta:MSFormula]] =>
+	  '_:_['n:FNat, '|--<_>_['_;_['Gamma:MSFormula, 'FC:Formula, 'FC:Formula], 'Delta:MSFormula ]]
+	  [ label('C) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "contraction.tex" .
+
+    --- Invertibility is not needed for these theorems
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction is needed in this case
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT) = none .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = none .
+
+endfm
+
+view Admissibility-C from ADMISSIBILITY-SPEC to ADMISSIBILITY-C is endv    
+
+mod PROVE-C is pr  ADMISSIBILITY-THEOREM{Admissibility-C} . endm
+

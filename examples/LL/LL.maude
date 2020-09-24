@@ -1,0 +1,106 @@
+--- One-sided system for LL
+
+load ../../admissibility .
+load ../../invertibility .
+
+mod LL is
+   ex SEQUENT-SOLVING .
+
+    sort ?Formula . --- Formulas marked with ?
+    subsort ?Formula < Formula .
+    
+    --- Atomic Propositions
+    op p : Nat -> Prop [ctor] .
+    op perp : Nat -> Prop .
+    --- eq (A:Prop perp) perp  = A:Prop .
+
+    --- units
+    op 1 : -> Formula [ctor] .
+    op bot : -> Formula [ctor] .
+    
+    --- Connectives
+    op _**_ : Formula Formula -> Formula [ctor prec 25] . *** tensor
+    op _$_ : Formula Formula -> Formula [ctor prec 25] . *** par (for Classical LL)
+
+    --- Exponentials 
+    op !_ : Formula -> Formula [ctor prec 20] .
+    op ?_ : Formula -> ?Formula [ctor prec 20] .
+
+    --- Multisets of ?Formulas
+    sort ?MSFormula .
+    subsort ?Formula < ?MSFormula .
+    subsort ?MSFormula < MSFormula .
+    op * : -> ?MSFormula .
+    op _;_ : ?MSFormula ?MSFormula -> ?MSFormula [prec 40 ctor assoc comm id: * ] .
+    op _;_ : MSFormula ?MSFormula -> MSFormula [prec 40 ctor assoc comm id: * ] .
+    op _;_ : ?MSFormula MSFormula  -> MSFormula [prec 40 ctor assoc comm id: * ] .
+
+    --- Contracted ?Formulas
+    op contract : Nat ?Formula -> ?MSFormula .
+    eq contract(0, ? F) = * .
+    eq contract(s(n), ? F) = ? F ; contract(n, ? F) .
+
+    --- Checking if a context contains ?Formulas
+    op containsQuest : MSFormula -> Bool .
+    eq containsQuest((? F ; CL)) = true .
+    ceq containsQuest((?CL ; CL)) = true 
+     if ?CL =/= * .
+    eq containsQuest(CL) = false [owise] .
+
+
+    
+    op dual : Formula -> Formula .
+    eq dual(p(i)) = perp(i) .
+    eq dual(perp(i)) = p(i) .
+    eq dual(1) = bot .
+    eq dual(bot) = 1 .
+    eq dual(F ** G) = dual(F) $ dual(G) .
+    eq dual(F $ G) = dual(F) ** dual(G) .
+    eq dual(! F) = ? dual(F) .
+    eq dual(? F) = ! dual(F) .
+    
+    
+
+    eq TEXReplacement =
+	('|-- |-> '\vdash),
+	('perp |-> '\llperp),
+	('** |-> '\tensor) , ('$ |-> '\lpar) ,
+	('; |-> '`, ),
+	(': |-> '\wspace ),
+	('1 |-> '\one),
+	('bot |-> '\bot), 
+	('GW |-> 'G_W)
+	.
+    
+    eq TEXReplacementSeq =
+	('bot |-> '\bot),
+	('par |-> '\lpar),
+	('one |-> '\one),
+	('init |-> 'I),
+	('tensor |-> '\tensor),
+	('quest |-> '?),
+	('bang |-> '!),
+	('questC |-> '?C),
+	('questW |-> '?W),
+	('height |-> '\heightRule)
+	.
+
+    --- Fresh constant for weakening lemmas
+    op GW : -> Formula .
+    
+    --- vars A B : Prop .
+    vars F G F' G' : Formula .
+    vars CL CL' : MSFormula .
+    vars i n : Nat .
+    var ?CL : ?MSFormula .
+
+    rl [init] : |-- p(i) ; perp(i) => proved .
+    rl [bot] : |-- CL ; bot => |-- CL . 
+    rl [par] : |-- CL ; F $ F' => |-- CL ; F ; F' . 
+    rl [one] : |-- 1 => proved .
+    rl [tensor] : |-- CL ; CL' ;  G ** G' =>  (|-- CL ; G) | (|-- CL' ; G') .
+    rl [questC] : |-- CL ; ? F => |-- CL ; ? F ; ? F .
+    rl [questW] : |-- CL ; ? F => |-- CL .
+    rl [quest]  : |-- CL ; ? F => |-- CL ; F .
+    rl [bang]  : |-- ?CL ; ! F => |-- ?CL ; F .
+endm

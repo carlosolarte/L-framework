@@ -1,0 +1,329 @@
+--- -------------------
+--- Cut Elimination
+--- Common definitions
+--- -------------------
+
+***(
+The cut-elimination procedure is marginally different for each kind of system
+(one sided, two sided, dyadic, single conclusion, etc). This file contains
+common definitions for all these procedures
+
+The theory CUT-SPEC specified the requirements to use this procedure. The
+Module CUT-BASE defines the main algorithm and also a simple protocol to output
+the result of the analysis. 
+
+Some operations are not completely defined here since they must be filled up
+with the appropriate equations/definitions of the cut-elimination procedure to
+be implemented. Those operations are marked with (!!)
+
+)
+
+load theorem-proving-base .
+    
+fth CUT-SPEC is
+    pr META-LEVEL .
+    --- Name of the module with the object-logic description
+    op mod-name : -> Qid .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    --- already proved theorems
+    op already-proved-theorems : -> RuleSet .
+    --- File name to write the output
+    op file-name : -> String .
+    --- Already height preserving invertibility lemmas
+    op inv-rules : -> QidList .
+endfth
+
+
+mod CUT-BASE{SPEC :: CUT-SPEC} is
+    pr THEOREM-PROVING-BASE  .
+
+    --- -------------------------------
+    var M                       : Module .
+    vars T T'                   : Term .
+    vars LGT LGT'               : GroundTermList .
+    var Res                     : Result .
+    var B                       : Bool .
+    vars Q Q'                   : Qid .
+    vars Q1 Q2                  : Qid .
+    var QL                      : QidList .
+    vars txt txt'               : String .
+    var C                       : Constant .
+    var NeTL                    : TermList .
+    var GTL                     : GroundTermList .
+    vars GTGoal GF              : GroundTerm .
+    vars gtc gtc' gtp gtp'      : GroundTerm .
+    vars GT GT' GT''            : GroundTerm .
+    vars tc tc' tp tp'          : Term .
+    vars TGoal TF               : Term .
+    var lccase                  : LCutcase .
+    var ccase                   : Cutcase .
+    var Ans                     : Trace? .
+    var N                       : Nat .
+    var  UT                     : UnificationTriple? .
+    vars S S'                   : Substitution .
+    var  Nvars                  : Nat .
+    vars GTA GTB GTC            : GroundTerm .
+    vars gh gh'                 : GroundTerm .
+    --- -------------------------------
+    
+    --- ===========================
+    --- Parameters of the analysis.  
+    --- ===========================
+    op module : -> Module .
+    eq module = labelSeqInf(upModule(mod-name, false )) .
+    op bound-search : -> Nat .
+    eq bound-search = bound-spec .
+    
+    --- Cut rule (to be defined by the OL)
+    op cut-rule : -> Rule . 
+    --- Term denoting error
+    op error : -> Term .
+    eq error = 'error.Goal .
+
+    --- Premise 1 and 2 of the cut rule
+    op pr1 : -> Term .
+    op pr2 : -> Term .
+    op pr$ : Nat Term -> Term .
+    eq pr1 = pr$(1,getBody(cut-rule)) .
+    eq pr2 = pr$(2,getBody(cut-rule)) .
+    eq pr$(1, '_|_[T, T']) = T .
+    eq pr$(2, '_|_[T, T']) = T' .
+
+    --- Main HOLD procedure (to be implemented in each instance)
+    op holds? : Qid Qid -> Result .
+
+    --- Counting the number of constructors for formula 
+    --- This can be  used to determine if the cut is principal or not
+    op numFormulas : GroundTerm -> Nat .
+    op numFormulasL : GroundTermList -> Nat .
+    eq numFormulas(C)
+      = if getType(C) == 'Formula or getType(C) == 'Prop 
+        then 1 else 0 fi .
+
+    eq numFormulas(Q [ NeTL ])
+      = numFormulasL(NeTL) .
+    eq numFormulasL(empty)
+      = 0 .
+    eq numFormulasL((GT, GTL))
+      = numFormulas(GT) +  numFormulasL(GTL) .
+
+    --- ------------------------------------
+    --- CASES
+    --- ------------------------------------
+    --- Conclusion + premises of the left and right premises of the cut-rule
+    sorts Cutsubcase Cutcase LCutcase .
+    subsort Cutcase < LCutcase .
+    op empty : -> LCutcase [ctor] .
+    op _,,_ : LCutcase LCutcase -> LCutcase [ctor id: empty assoc] .
+    --- The last parameters are the goal and the cut formula
+    op cut-case : Cutsubcase Cutsubcase Term Term -> Cutcase [ctor format(n n)] .
+    --- The case for ground terms including the extended module with constants
+    op cut-case : Module Cutsubcase Cutsubcase Term Term -> Cutcase [ctor format(n n)] .
+    --- Premise, Conclusion 
+    op cut-sub-case : Term Term -> Cutsubcase [ctor format(n n)] .
+
+    --- From Terms to GroundTerms
+    op toConstants : Cutcase -> Cutcase .
+    ceq toConstants(
+	  cut-case(
+	    cut-sub-case(tc, tp),
+	    cut-sub-case(tc', tp'),
+	    TGoal,
+	    TF)) =
+	cut-case(
+	  newModule(module, getNewOps(LGT)), --- extended module with constants
+	  cut-sub-case(gtc, gtp),
+	  cut-sub-case(gtc', gtp'),
+	  GTGoal,
+	  GF)
+      if  pair-TC('join[gtc, gtp, gtc', gtp', GTGoal,  GF], LGT) :=
+	  toConstants('join[tc, tp, tc', tp', TGoal, TF]) .
+      
+    --- Generating the cases (first premise)                               
+    ceq generate-cases(N , Q1, Q2 ) =
+      if UT == (noUnifier).UnificationTriple?
+	then empty                 
+	else generate-cases(0 , Q1, Q2,  UT) ,,
+	  generate-cases(s(N) , Q1, Q2) fi
+      if UT :=  metaVariantDisjointUnify(module,  pr1 =? getHead(Q1, module), empty, 0, N) .
+
+      --- Generating the cases (second premise)                              
+    ceq generate-cases(N, Q1,Q2, { S , S' , Nvars })
+      =                            
+      if UT == (noUnifier).UnificationTriple? then empty
+	else                       
+	  cut-case(
+	    cut-sub-case(apply(pr1, S,  left(UT)), apply(applyRule(apply(pr1,S), Q1, module, S'), left(UT))),
+	    cut-sub-case(apply(pr2, S,  left(UT)), applyRule(apply(pr2,S, left(UT)), Q2, module, right(UT))),
+	    apply(getHead(cut-rule), S, left(UT)), --- goal to be proved
+	    apply('FCut$$:Formula, S, left(UT)) --- the cut formula
+	    ),,
+	  generate-cases(s(N), Q1, Q2,  { S , S' , Nvars })
+	fi
+      
+      if UT :=  metaVariantDisjointUnify(module,  apply(pr2, S) =? getHead(Q2, module), empty, Nvars, N) .
+
+      --- Induction on the height of the derivation.
+      --- The first parameters are the height of the derivations of the left and right premises
+      --- The 3rd parameter is the cut formula. 
+    op induct-height : GroundTerm GroundTerm GroundTerm -> RuleSet .  
+    eq induct-height('suc[gh], 'suc[gh'], GF) =
+	( rl getHead(cut-rule) =>
+	  '_|_[   --- Fixing height and also the cut formula
+	    apply(pr1, ('h1$$:FNat <- gh ; 'FCut$$:Formula <- GF)),
+	    apply(pr2, ('h2$$:FNat <- 'suc[gh'] ; 'FCut$$:Formula <- GF))]
+	  [ label('\hCut) ]. )
+	( rl getHead(cut-rule) =>
+	  '_|_[   --- Fixing height and also the cut formula
+	    apply(pr1, ('h1$$:FNat <- 'suc[gh] ; 'FCut$$:Formula <- GF)),
+	    apply(pr2, ('h2$$:FNat <- gh' ; 'FCut$$:Formula <- GF))]
+	  [ label('\hCut) ]. )
+    .
+
+	  --- Induction on the structure
+    op induct-struct : GroundTerm -> RuleSet .
+    op $induct-struct : GroundTermList -> RuleSet .
+    --- Only defined for composed formulas
+    eq induct-struct(Q[LGT])
+      = $induct-struct(LGT) .
+    eq induct-struct(GT)
+      = none [owise] .
+    eq $induct-struct(empty) = none .
+
+    eq $induct-struct( (GTA , LGT))
+      = induct-struct-formula(GTA)
+      $induct-struct(LGT) .
+
+    --- This operator must be completed by the particular cut-elimination implemented
+    op induct-struct-formula : GroundTerm -> RuleSet . --- (!!)
+
+      --- ------------------
+      --- More Latex support
+      --- ------------------
+      --- Building the output for a cut-case
+      --- Arguments: Goal, conc and prem of the left premise and conc
+      --- and prem of the right premise of the cut
+    op toTex : Module Qid Qid GroundTerm GroundTerm GroundTerm GroundTerm GroundTerm  -> String .
+    eq toTex(M, Q, Q', GTGoal, gtc, gtp, gtc', gtp' ) =
+	toTex(AT( toTexSAbs(M, GTGoal), '\Cut,
+	    AT(toTexSAbs(M, gtc), ruleName(module,Q), toLeaves(M, gtp)),
+	    AT(toTexSAbs(M, gtc'), ruleName(module,Q'), toLeaves(M, gtp')))) .
+
+
+
+    --- -------------
+    --- The Algorithm
+    --- -------------
+
+    --- Cut-rule
+    op cut-rule : -> Rule . --- (!!)
+
+    op generate-cases : Qid Qid -> LCutcase .
+    eq generate-cases(Q1, Q2) = generate-cases(0, Q1, Q2) .
+
+    op generate-cases : Nat Qid Qid -> LCutcase . --- (!!)
+    op generate-cases : Nat Qid Qid UnificationTriple -> LCutcase . --- (!!)
+
+	--- Cut-Elimination procedure
+    op holds? : Qid Qid -> Result .
+    ceq holds?(Q, Q') =
+      if lccase =/= empty then  holds?(Q, Q', lccase) else emptyR fi
+      if lccase := generate-cases(Q, Q') .
+    
+    op holds? : Qid Qid LCutcase -> Result .
+    eq holds?(Q, Q', empty) = emptyR .
+    eq holds?(Q, Q',  (ccase,, lccase)) =
+	holds$?(Q, Q' , ccase) + holds?(Q, Q', lccase) .
+    
+    --- Cutcase is a term (with variables)
+    op holds$? : Qid Qid Cutcase -> Result .
+    eq holds$?(Q, Q',
+	  cut-case(
+	    cut-sub-case(tc, tp),
+	    cut-sub-case(tc', tp'),
+	    TGoal,
+	    TF)) =
+	holds$?(Q, Q',
+	  toConstants(cut-case(
+	      cut-sub-case(tc, tp),
+	      cut-sub-case(tc', tp'),
+	      TGoal,
+	      TF))) .
+
+    --- Cutcase is already ground
+    op holds$? : Qid Qid Cutcase -> Result . --- (!!)
+
+	--- Building the result
+    --- 2 rules, Goal, 2 x conc and premise and trace
+    op result : Module Qid Qid GroundTerm GroundTerm GroundTerm GroundTerm GroundTerm Trace? -> Result .
+    eq result(M, Q, Q', GTGoal, gtc, gtp, gtc', gtp', Ans)
+      =
+      if Ans == failure
+	then < false ,
+	  "\n\\reductionFail{" +
+	    toTex(M,Q, Q', GTGoal, gtc, gtp, gtc', gtp' ) + "}{" +
+	    string-fail(M, GTGoal) + "}\n \\begin{lstlisting}\n" +  print-ax(M) + "\\end{lstlisting}" >
+	else < true ,
+	  "\n\\cutEnv{\\cutReduction{" + toTex(M,Q, Q', GTGoal, gtc, gtp, gtc', gtp' ) + "}\n{" +  output(M, Ans)  + "}}\n" >
+	fi
+	.
+
+    --- -------------------------------------
+    --- Protocol calling the needed functions
+    --- -------------------------------------
+    op cpr : -> Cid .
+    op opr : -> Oid .
+    op ocase : -> Oid . 
+    op out:_ : Result -> Attribute .
+    ops cases:_ : QidList -> Attribute .
+    ops subcases:_ : QidList -> Attribute .
+    op case:_ : Qid -> Attribute .
+    ops ready busy : -> Attribute .
+    op wait-print:_ : Bool -> Attribute .
+    op prove-it : -> Configuration .
+
+    --- Only the rules with inductive measure are considered (ruleNamesFinite)
+    rl prove-it =>
+	<>
+	Println("Cut Elimination Theorem\n*************************************************")
+	Println("Cut-elimination Theorem ")
+	< opr : cpr | ready,
+		      out: (< true , "\\section{ Cut-Elimination}\n" > ) ,
+	cases: ruleNamesFinite(module)
+	> .
+
+    rl < opr : cpr | ready, out: Res, cases: (Q QL) >
+      =>
+	Print("Proving the case " + string(Q) )
+	< opr : cpr | busy, out: Res, cases: (QL) >
+	< ocase : cpr | out: emptyR, case: Q, subcases: (ruleNamesFinite(module)) > .
+    
+    crl < ocase : cpr | out: < B , txt > , case: Q, subcases: nil >
+	< opr : cpr | busy, out: Res, cases: (QL) >
+      =>
+	Println("\t......\t" + print-output(B))
+	< opr : cpr | ready, out: (Res + < B , txt' >) , cases: (QL) >
+      if
+	  txt' :=
+	  "\\subsection{Status of  $" + string(ruleName(module,Q)) + "$:~~"
+	    + if B then "\\OKTK" else "\\failTK" fi
+	    + "}\n" +
+	  "\\begin{itemize}\n"  + txt + "\n\\end{itemize}" .
+    
+    
+    crl < ocase : cpr | out: Res , case: Q, subcases: (Q' QL) >
+      =>
+	< ocase : cpr | out: (Res + < B ,
+			  "\n\\item Case rule $" + string(ruleName(module,Q')) + "$\\\\\n" + txt  >)  ,
+	case: Q, subcases: QL >
+      if < B , txt > := holds?(Q, Q') 
+	  .
+    
+    
+    rl < opr : cpr | ready, out: < B , txt >, cases: nil > =>
+	Println("Done! ....... \t")
+	Println("Output: " + file-name)
+	Println("Status: " + print-output(B))
+	Write(txt , file-name, "w+") .
+endm

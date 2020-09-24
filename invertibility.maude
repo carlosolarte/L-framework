@@ -1,0 +1,308 @@
+--- -----------------------
+--- Invertibility of rules
+--- -----------------------
+
+***(
+Consider the rule
+
+P1 ... Pn
+========== R
+     C
+
+R is height preserving invertible if each Pi / C is height preserving
+admissible. Hence, the goal of the analysis is: for each premise, prove that Pi
+implies C. The procedure defined here works only for 0,1 and 2 premises rules.
+In the case of 2 premises, it is possible to prove, independently, the
+invertibility of each premise
+
+The entry point is the theory INV-SPEC that specifies the name of the module to
+be analyzed as well as the already proved admissibility theorems that can be
+used during the proof.
+
+)
+
+    
+load theorem-proving-base .
+
+    
+fth INV-SPEC is
+    pr META-LEVEL .
+    --- Name of the module with the object-logic description
+    op mod-name : -> Qid .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    --- already proved theorems
+    op already-proved-theorems : -> RuleSet .
+    --- File name to write the output
+    op file-name : -> String .
+endfth
+
+mod INV-ALG{SPEC :: INV-SPEC} is
+    pr THEOREM-PROVING-BASE .
+
+    ----------------------------
+    vars  M M'           : Module .
+    var  N               : Nat .
+    vars Q Q'            : Qid .
+    var  R               : Rule .
+    var  RS              : RuleSet .
+    var  LGT             : GroundTermList .
+    vars T  T' T''       : Term .
+    vars TA  TB          : Term .
+    vars TC TC' TP TP'   : Term .
+    vars GT GT' GT''     : GroundTerm .
+    vars GTA GTB         : GroundTerm .
+    var GG               : GroundTerm .
+    vars GTC GTP GTP'    : GroundTerm .
+    var gh               : GroundTerm .
+    var  UT              : UnificationTriple? .
+    var Ans              : Trace? .
+    var str              : String .
+    var AS               : AttrSet .
+    var Res              : Result .
+    var nrule            : Nat .
+    var B                : Bool .
+    var invc             : Inv-Case .
+    var res              : Result .
+    ----------------------------
+
+    --- ===========================
+    --- Parameters of the analysis.  
+    --- ===========================
+    op module : -> Module .
+    eq module = labelSeq(upModule(mod-name, false )) .
+    op bound-search : -> Nat .
+    eq bound-search = bound-spec .
+
+    --- ------------------------
+    --- Slicing a 2-premise rule
+    --- ------------------------
+    --- In the case of 2 premises rules, it returns a rule with only one 
+    --- premise (nrule = 0 the left premise and nrule = 1 the right premise
+    op getInvRule : Nat Qid -> Rule .
+
+    ceq getInvRule(nrule, Q) 
+      = if nrule == 0 
+	then rl '_:_['suc[T],T'] => TA [ AS ]. 
+	else rl '_:_['suc[T],T'] => TB [ AS ]. 
+	fi
+      if ( rl '_:_['suc[T],T'] => '_|_[TA, TB] [ AS ]. ) := getRule(Q, module) .
+      
+      --- Axioms and 1-premise rules
+    eq getInvRule(nrule, Q) 
+      = getRule(Q, module) [owise] .
+    
+    
+    --- ===========================
+    --- Cases
+    --- ===========================
+    --- The first parameter is the rule being proved invertible. In
+    --- the case of rules with two premises, the rule stored here is
+    --- the sliced version containing only one premise. The Qid
+    --- parameter is the identifier of the other rule. The first
+    --- parameter of type Term is the conclusion of the sequent and
+    --- the second the premises after the application of the second
+    --- rule. The last parameter of type Term corresponds to the
+    --- premises after the application of the rule being tested as
+    --- invertible.
+
+    sort Inv-Case .
+    op inv-case : Rule Qid Term Term Term   -> Inv-Case [ctor] .
+    --- The case after changing variables with fresh constants
+    op inv-case : Rule Qid Module GroundTerm GroundTerm GroundTerm   -> Inv-Case [ctor] .
+    op no-case : -> Inv-Case [ctor] .
+
+    --- Returns the unified term of the heads of the rules
+    --- The first parameter is the number of the premise being tested
+    --- The goal is: assume that Q' is applied first. Is there a proof starting with Q?
+    op generate-cases : Nat Nat Qid Qid -> Inv-Case .
+    
+    ceq  generate-cases(nrule, N,Q, Q')
+      = if UT == (noUnifier).UnificationTriple?
+	then no-case
+	else inv-case(R, Q',
+	    apply(T', right(UT)), --- The term after the substitution
+	    applyRule(apply(T', right(UT)), Q', module, right(UT)), --- Applying rule Q'
+	    applyRule(apply(T, left(UT)), R, module, left(UT))) --- Applying Q
+	fi
+      if
+        R  := getInvRule(nrule, Q) --- slicing the rule if needed
+	/\ T  := getHead(R)
+	/\ T' :=  getHead(Q', module)
+	/\ UT := metaVariantDisjointUnify(module, T =? T', empty, 0, N)
+    .
+
+    --- =============================
+    --- The invertibility algorithm
+    --- =============================
+    
+    --- ---------------
+    --- Induction
+    --- ---------------
+    --- Induction in this kind of analysis means taking all the
+    --- premises and apply the rule to be analyzed preserving the height
+    --- of the derivation. 
+
+    --- We consider here the case in which there are no premises
+    op inductive : Module GroundTerm Rule -> RuleSet .
+    eq inductive(M, GT, R) =
+      if GT == 'proved.Goal
+	then none
+	else ind-apply(project(M, inductive-rule(R)), GT)
+	fi .
+
+    --- Returning the rule that "preserves" height
+    op inductive-rule : Rule -> Rule .
+    ceq inductive-rule(R) =
+	( rl '_:_[T,T'] => T'' [ label('IND) ]. )
+      if
+	  ( rl '_:_['suc[T],T'] => T'' [ AS ]. ) := R .
+
+      --- Applying the inductive hypothesis and generating the new axioms
+    op ind-apply : Module GroundTerm  -> RuleSet .
+    eq ind-apply(M, '_:_[GT,GT']) =
+	premises-labelL('\AXHI, one-step(M, '_:_[GT,GT'])) .
+
+    --- applyRuleL('_:_[GT,GT'], 'IND, M)) .
+    eq ind-apply(M, '_|_[GT,GT']) = ind-apply(M, GT) ind-apply(M, GT') .
+    
+
+    --- The first nat parameter can be 0 (left premise) or 1 (left
+    --- premise) for rules with 2 premises
+    op holds? : Nat Qid Qid -> Result .
+    op holds? : Nat Nat Qid Qid Result -> Result .
+    op holds? : Inv-Case -> Result .
+
+    --- Initial goal starting with the unifier 0
+    eq holds?(nrule, Q, Q')
+      = holds?(nrule, 0, Q , Q', emptyR) .
+
+    --- Checking the case for the unifier N
+    ceq holds?(nrule, N, Q, Q', res) 
+      = if invc == no-case
+	then res
+	else holds?(nrule, s(N), Q, Q', res + holds?(invc) )
+	fi
+      if invc := generate-cases(nrule, N, Q, Q') .
+
+      --- Checking the non-ground-case
+    ceq holds?(inv-case(R,Q', TC, TP, TP'))
+      =
+	holds?(inv-case(R,Q', M, GTC, GTP, GTP'))
+      if
+	  pair-TC('join[GTC, GTP, GTP'], LGT) := toConstants('join[TC, TP, TP'])
+	  /\ M := newModule(module, getNewOps(LGT))
+	  .
+
+      --- --------------------------
+      --- Checking the ground cases
+      --- --------------------------
+      --- Trivial case
+    eq holds?(inv-case(R,Q', M, GTC, GTP, 'proved.Goal))
+      = < true , "\\[\n\\reduction{" + string(M, Q',  GTC, GTP) + "}\n{\\trivial}\\]\n" > .
+    
+
+    --- One premise case
+    ceq holds?(inv-case(R,Q', M, GTC, GTP, '_:_[gh, GTP']))
+      = 
+      if Ans == failure
+	  --- add \\begin{lstlisting}\n" +  print-ax(M') + "\\end{lstlisting}" in the failing case for debugging 
+	then < false , "\n\\reductionFail{" + string(M', Q',  GTC, GTP) + "}{" + string-fail(M, GG) + "}\n"  >
+	else < true , "\\[\n\\reduction{" + string(M', Q',  GTC, GTP) + "}\n{" +  output(M', Ans)  + "}\\]\n" >
+	fi
+	--- Adding the already proved theorems
+      if
+	  M' := newModuleRls(M, already-proved-theorems premises(GTP) inductive(M, GTP, R)  )
+	  /\ GG := '_:_['suc[gh], GTP'] 
+	  /\ Ans := metaSearchPath(M', GG, upTerm(proved), nil, '*, bound-spec, 0)
+	  .
+    
+endm
+
+--- -------------------------------------
+--- Protocol calling the needed functions
+--- -------------------------------------
+mod INV-PROVING{SPEC :: INV-SPEC} is
+    pr INV-ALG{SPEC} .
+    
+    --- -------------------------------
+    var Res              : Result .
+    vars Q Q'            : Qid .
+    var nrule            : Nat .
+    var B                : Bool .
+    vars  QL QL'         : QidList .
+    vars txt txt' txt''  : String .
+    --- -------------------------------
+    
+    op cpr : -> Cid .
+    op opr : -> Oid .
+    op ocase : -> Oid . 
+    op out:_ : Result -> Attribute .
+    op np:_ : Nat -> Attribute . --- Number of the premise
+    ops cases:_ : QidList -> Attribute .
+    ops subcases:_ : QidList -> Attribute .
+    op case:_ : Qid -> Attribute .
+    ops ready busy : -> Attribute .
+    op wait-print:_ : Bool -> Attribute .
+    op prove-it : -> Configuration .
+    
+    rl prove-it =>
+	<>
+	Println("Invertibility Analysys\n*************************************************")
+	< opr : cpr | ready,
+		      out: (< true , "\\section{ Invertibility of Rules}\n" > ) ,
+	cases: ruleNames(module) > .
+
+    rl < opr : cpr | ready, out: Res, cases: (Q QL) >
+      =>
+	< opr : cpr | busy, out: Res, cases: (QL) >
+	< ocase : cpr | np: 0, out: emptyR, case: Q, subcases: (ruleNames(module)) >
+    .
+    
+    op printCase : Nat Qid Bool -> String .
+    eq printCase(nrule, Q, B)
+      =   "Proving the case " + string(Q) + 
+	if numPremises(getRule(Q, module)) == 2
+	then (if nrule == 0 then "(L):" else "(R):" fi)
+	else ":"
+	fi
+	+ "\t......\t" + print-output(B)
+	.
+    
+    crl < ocase : cpr | np: nrule, out: < B , txt > , case: Q, subcases: nil >
+	< opr : cpr | busy, out: Res, cases: (QL) >
+      =>
+	Println(printCase(nrule, Q, B))
+	if nrule == 0 and-then numPremises(getRule(Q, module)) == 2
+	  then
+	    < ocase : cpr | np: 1, out: emptyR , case: Q, subcases:  (ruleNames(module)) >
+	    < opr : cpr | busy, out: (Res + < true , txt' >), cases: (QL) >
+	  else
+	    < opr : cpr | ready, out: (Res + < true , txt' >) , cases: (QL) >
+	  fi
+	if
+	    
+	    txt' :=
+	    "\\subsection{Status of  $" + string(ruleName(module,Q)) + "$"
+	      + if nrule == 1 then "~(Right Premise): " else ":~~" fi
+	      + if nrule == 0 and-then numPremises(getRule(Q, module)) == 2 then "~(Left Premise): " else ": ~~" fi
+	      + if B then "\\invertible" else "\\noinvertible" fi
+	      + "}\n" +
+	    "\\begin{itemize}\n"  + txt + "\n\\end{itemize}" .
+
+    
+    crl < ocase : cpr | np: nrule, out: Res , case: Q, subcases: (Q' QL) >
+      =>
+	< ocase : cpr | np: nrule, out: (Res + < B ,
+			  "\n\\item Case rule $" + string(ruleName(module,Q')) + "$\\\\\n" + txt  >)  ,
+	case: Q, subcases: QL >
+      if < B , txt > := holds?(nrule, Q, Q') 
+	  .
+    
+    
+    rl < opr : cpr | ready, out: < B , txt >, cases: nil > =>
+	Println("Done! ....... \t")
+	Println("Output: " + file-name) 
+	Write(txt , file-name, "w+") .
+endm
+    

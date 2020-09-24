@@ -1,0 +1,33 @@
+--- Cut Elimination theorem
+--- The additive cut (sharing the context) is used here where
+--- weakening is embedded in the procedure (and hence, those rules do
+--- not need to be added explicitly as already-proved-theorems)
+load ../../cut-add-mcon .
+
+fmod CUT-G3C is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'G3c .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 15 .
+
+    --- We assume the theorem on heights
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems =
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => 
+     '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] 
+     [ label('height) ]. ) .
+    --- File name to write the output
+    op file-name : -> String .
+    eq file-name = "cut.tex" .
+
+    --- No invertible lemmas are needed
+    op inv-rules : -> QidList .
+    eq inv-rules = 'impR 'impL 'AndL 'AndR 'OrR 'OrL .
+
+endfm
+    
+view Cut-G3c from CUT-SPEC to CUT-G3C is endv    
+
+mod PROVE-CUT is pr CUT-PROVING{Cut-G3c} . endm

@@ -1,0 +1,96 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Theorem prover in Maude
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{amscd}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{proof}
+\usepackage{color}
+\usepackage{fullpage}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily}
+\usepackage{hyperref}
+
+
+\usepackage{graphicx}
+\newcommand{\iimp}{\to}
+\newcommand{\suc}{\bullet}
+\newcommand{\wspace}{}
+\newcommand{\trivial}{\texttt{trivial}}
+\newcommand{\noheight}{-}
+\newcommand{\errorTK}{\texttt{error}}
+\newcommand{\failTK}{$\texttt{fail}$}
+\newcommand{\OKTK}{$\texttt{OK}$}
+\newcommand{\var}[1]{\texttt{v}_{#1}}
+\newcommand{\Assumption}{\texttt{ax}}
+\newcommand{\AssumptionInv}{\texttt{inv-th/ax}}
+\newcommand{\AssumptionW}{\texttt{ax/W}}
+\newcommand{\AXHI}{\texttt{ax}/\texttt{ind}}
+\newcommand{\fail}{\textcolor{red}{\texttt{fail!}}}
+\newcommand{\IH}{\texttt{IH}}
+\newcommand{\IHMutual}{\texttt{IH-Mutual}}
+\newcommand{\FORMULA}[1]{\texttt{F}_{#1}}
+\newcommand{\BF}[1]{\Box\texttt{F}_{#1}}
+\newcommand{\MSBF}[1]{\Box\Gamma_{#1}}
+\newcommand{\CTX}[1]{\Delta_{#1}}
+\newcommand{\CTXQ}[1]{?\Gamma_{#1}}
+\newcommand{\hCut}{\texttt{hCut}}
+\newcommand{\mCut}{\texttt{mCut}} %Mutual induction
+\newcommand{\sCut}{\texttt{sCut}}
+\newcommand{\Cut}{\texttt{Cut}}
+\newcommand{\HEIGHT}[1]{\texttt{h}_{#1}}
+\newcommand{\NAT}[1]{\texttt{n}_{#1}}
+\newcommand{\PROP}[1]{\texttt{p}_{#1}}
+\newcommand{\invertible}{\texttt{Invertible}}
+\newcommand{\noinvertible}{\texttt{Non invertible}}
+\newcommand{\permutes}{\texttt{Permutes}}
+\newcommand{\nopermutes}{\texttt{Does not permute}}
+\newcommand{\proved}{\texttt{proved}}
+\newcommand{\reduction}[2]{
+  \tiny
+\begin{aligned}[c]
+#1
+\end{aligned}
+\begin{aligned}[c]
+\qquad \to\qquad 
+\end{aligned}
+\begin{aligned}[c]
+#2
+\end{aligned}
+}
+
+\newcommand{\reductionFail}[2]{
+  \[
+  \tiny
+\begin{aligned}[c]
+#1
+\end{aligned}
+\begin{aligned}[c]
+\qquad \to\qquad 
+\end{aligned}
+\begin{aligned}[c]
+    \textcolor{red}{
+#2
+    }
+\end{aligned}
+\]
+}
+
+\newcommand{\cutReduction}[2]{
+\begin{array}{c}
+#1\\
+\to\\
+\textcolor{blue}{#2}
+\end{array}
+}
+
+\newcommand{\cutEnv}[1]{
+%\resizebox{\textwidth}{!}
+\noindent{
+$\scriptsize
+#1
+$}
+}
+
+\newcommand{\heightRule}{\texttt{H}}

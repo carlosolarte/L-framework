@@ -1,0 +1,33 @@
+--- ID Expansion
+
+load ../../id-expand .
+
+fmod ID-EXP is
+    pr META-LEVEL .
+
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+
+    op file-name : -> String .
+    eq file-name = "id-exp.tex" .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    var F : GroundTerm .
+    op goal : GroundTerm -> GroundTerm .
+    eq goal(F) = '_:_['inf.INat, '|--<_>_['*.MSFormula, '_;_[F, 'dual[F]]]] .
+
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems 
+      = ( rl '_:_['Inf:INat,  '|--<_>_['_;_['Gamma:MSFormula, 'FW:Formula], 'Delta:MSFormula]] =>
+	  '_:_['Inf:INat, '|--<_>_['Gamma:MSFormula, 'Delta:MSFormula ]]
+	  [ label('W) ]. ) .
+
+    op types-formula : -> TypeList .
+    eq types-formula = nil .
+endfm
+
+view Id-EXP from ID-EXP-SPEC to ID-EXP is endv    
+
+mod PROVE-ID is pr  ID-EXP-THEOREM{Id-EXP} . endm

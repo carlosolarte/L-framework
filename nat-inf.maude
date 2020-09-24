@@ -1,0 +1,29 @@
+--- -------------
+--- NAT + INF
+--- ------------
+
+--- Natural Numbers extended with a constructor denoting "unknown"
+--- used in the definition of sequents without measures
+
+fmod NAT-INF is
+    pr NAT .
+    sorts FNat INat .
+    subsort FNat < INat .
+
+    --- Don't know / undefined
+    op inf : -> INat [ctor] .
+    --- Zero
+    op z : -> FNat [ctor] .
+    --- Sucessor
+    op suc : FNat -> FNat [ctor] .
+
+    var n : FNat .
+
+    --- Converting Maude's Nat into FNats and vice-versa
+    op toNat : FNat -> Nat .
+    eq toNat(z) = 0 .
+    eq toNat(suc(n)) = s(toNat(n)) .
+    op fromNat : Nat -> FNat .
+    eq fromNat(0) = z .
+    eq fromNat(s(n:Nat)) = suc(fromNat(n:Nat)) .
+endfm

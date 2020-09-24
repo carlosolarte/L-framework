@@ -1,0 +1,28 @@
+--- Invertibility lemmas.
+--- Note that ?c (contraction) is invertible but not height-preserving invertible 
+
+    
+--- ---------------------------------------------------------
+--- Height preserving invertibility lemmas
+--- ---------------------------------------------------------
+
+fmod INV-LL is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'LL .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+    --- We assume that the Height theorem (if n|-- Gamma then s(n) |-- Gamma )
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems =
+	( rl '_:_['suc['n:FNat],  '|--_['Gamma:MSFormula]] => 
+        '_:_['n:FNat, '|--_['Gamma:MSFormula]]
+        [ label('height) ]. ) .
+    op file-name : -> String .
+    eq file-name = "inv.tex" .
+endfm
+
+view Inv-LL from INV-SPEC to INV-LL is endv    
+
+mod PROVE-INV is pr   INV-PROVING{Inv-LL} . endm
