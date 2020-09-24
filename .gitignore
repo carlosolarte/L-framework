@@ -1,0 +1,22 @@
+## Core latex/pdflatex auxiliary files:
+.DS_Store
+*.aux
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.lb
+*.blg
+*.bbl
+*.synctex.gz
+*.bak
+*.nav
+*.snm
+*.vrb
+*.fdb_*
+*.pdf
