@@ -1,6 +1,6 @@
 # L-Framework
 
-The L-Framework use rewrite- and narrowing-based reasoning for proving crucial
+The L-Framework uses rewrite- and narrowing-based reasoning for proving crucial
 properties of sequent systems such as admissibility of structural rules,
 invertibility of rules and cut-elimination. Such procedures have been fully
 mechanized in
@@ -8,14 +8,14 @@ mechanized in
 great degree of automation when used on several sequent systems including
 intuitionistic and classical logics, linear logic, and normal modal logics. 
 
-## Getting Started
+## Getting started
 
 The project was tested in [Maude
 3.0](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation).
 No extra library is needed for execution. The tool produces
 [LaTeX](https://en.wikipedia.org/wiki/LaTeX) files with the results. 
 
-## Structure of the Project
+## Structure of the project
 
 The root directory contains the Maude files specifying the different procedures
 and analyses. The directory [examples](./examples) contains case studies
