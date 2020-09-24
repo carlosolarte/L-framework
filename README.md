@@ -1,4 +1,4 @@
-#L-Framework
+# L-Framework
 
 The L-Framework use rewrite- and narrowing-based reasoning for proving crucial
 properties of sequent systems such as admissibility of structural rules,
