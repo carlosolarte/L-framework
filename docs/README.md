@@ -92,3 +92,7 @@ Here the results for the case studies considered so far:
 - [KT45](KT45.pdf): Modal logic extending K with the axioms T,4 and 5. Cut
   elimination does not hold for this logic
 
+## Interested in defining a new case study?
+
+See this step-by-step [tutorial](tutorial.md) explaining how to define a
+sequent system and prove its properties. 

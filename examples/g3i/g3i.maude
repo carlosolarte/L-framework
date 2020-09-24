@@ -22,7 +22,7 @@ mod G3i is
     eq TEXReplacement =
 	('|-- |-> '\vdash), ('/\ |-> '\wedge) , ('\/ |-> '\vee) ,
 	('--> |-> '\iimp), ('; |-> '`, ), ('True |-> '\top),
-	('False |-> '\bot), ('GW |-> 'G_W)
+	('False |-> '\bot)
 	.
     
     eq TEXReplacementSeq =
@@ -32,10 +32,7 @@ mod G3i is
 	('topL |-> '\top_L), ('topR |-> '\top_R),
 	('impL |-> '\iimp_L), ('impR |-> '\iimp_R),
 	('height |-> '\heightRule)
-
 	.
-    --- Fresh constant for weakening lemmas
-    op GW : -> Formula .
     
     var P : Prop .
     vars F G H : Formula .
