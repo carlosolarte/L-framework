@@ -21,5 +21,4 @@ The root directory contains the Maude files specifying the different procedures
 and analyses. The directory [examples](./examples) contains case studies
 including systems for classical and intuitionistic logic as well as modal and
 substructural logics. Further documentation about the procedures implemented
-can be found in [docs](./docs) as in [this
-paper](https://link.springer.com/chapter/10.1007/978-3-319-99840-4_7). 
+can be found in [docs](./docs).
