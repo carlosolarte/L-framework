@@ -85,6 +85,8 @@ Here the results for the case studies considered so far:
 
 - [DyLL](DyLL.pdf): Dyadic system for linear logic
 
+- [ILL](ILL.pdf): Intuitionistic Linear Logic
+
 - [K](K.pdf): Model logic K
 
 - [S4](S4.pdf): Modal logic extending K with the axioms T and 4

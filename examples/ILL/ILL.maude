@@ -1,0 +1,116 @@
+--- Intuitionistic Linear Logic
+
+load ../../admissibility .
+load ../../invertibility .
+
+mod ILL is
+   ex SEQUENT-SOLVING .
+
+    sort !Formula . --- Formulas marked with !
+    subsort !Formula < Formula .
+    
+    --- Atomic Propositions
+    op p : Nat -> Prop [ctor] .
+
+    --- units
+    op 1 : -> Formula [ctor] .
+    op top : -> Formula [ctor] .
+    
+    --- Connectives
+    op _**_ : Formula Formula -> Formula [ctor prec 25] . *** tensor
+    op _-o_ : Formula Formula -> Formula [ctor prec 25] . *** par (for Classical LL)
+    op _&&_ : Formula Formula -> Formula [ctor prec 25] . *** with
+    op _o_ :  Formula Formula -> Formula [ctor prec 25] . *** Oplus
+
+    --- Exponentials 
+    op !_ : Formula -> !Formula [ctor prec 20] .
+
+    --- Multisets of !Formulas
+    sort !MSFormula .
+    subsort !Formula < !MSFormula .
+    subsort !MSFormula < MSFormula .
+    op * : -> !MSFormula .
+    op _;_ : !MSFormula !MSFormula -> !MSFormula [prec 40 ctor assoc comm id: * ] .
+    op _;_ : MSFormula !MSFormula -> MSFormula [prec 40 ctor assoc comm id: * ] .
+    op _;_ : !MSFormula MSFormula  -> MSFormula [prec 40 ctor assoc comm id: * ] .
+
+    --- Contracted !Formulas
+    op contract : Nat !Formula -> !MSFormula .
+    eq contract(0, ! F) = * .
+    eq contract(s(n), ! F) = ! F ; contract(n, ! F) .
+
+    --- Checking if a context contains !Formulas
+    op containsBang : MSFormula -> Bool .
+    eq containsBang((! F ; CL)) = true .
+    ceq containsBang((!CL ; CL)) = true 
+     if !CL =/= * .
+    eq containsBang(CL) = false [owise] .
+
+
+    
+    eq TEXReplacement =
+	('|-- |-> '\vdash),
+	('perp |-> '\llperp),
+	('** |-> '\tensor) , ('$ |-> '\lpar) ,
+	('&& |-> '\with) ,
+	('; |-> '`, ),
+	(': |-> '\wspace ),
+	('1 |-> '\one),
+	('o |-> '\oplus),
+	('-o |-> '\limp),
+	('bot |-> '\bot), 
+	('top |-> '\top), 
+	('GW |-> 'G_W)
+	.
+    
+    eq TEXReplacementSeq =
+	('bot |-> '\bot),
+	('par |-> '\lpar),
+	('one |-> '\one),
+	('init |-> 'I),
+	('tensorL |-> '\tensorL),
+	('tensorR |-> '\tensorR),
+	('limpL |-> '\limpL),
+	('limpR |-> '\limpR),
+	('withL1 |-> '\withLA),
+	('withL2 |-> '\withLB),
+	('withR |-> '\withR),
+	('oplusL |-> '\oplusL),
+	('oplusR1 |-> '\oplusRA),
+	('oplusR2 |-> '\oplusRB),
+	('oneL |-> '\oneL),
+	('oneR |-> '\oneR),
+	('bang |-> '!),
+	('top |-> '\top),
+	('questC |-> '?C),
+	('questW |-> '?W),
+	('Der |-> '!L),
+	('Prom |-> '!R),
+	('height |-> '\heightRule)
+	.
+
+    --- vars A B : Prop .
+    vars F G F' G' : Formula .
+    vars CL CL' : MSFormula .
+    vars i n : Nat .
+    var !CL : !MSFormula .
+
+    rl [init] : p(i) |-- p(i) => proved .
+    rl [top] : CL |-- top => proved .
+    rl [oneR] : * |-- 1 => proved .
+    rl [oneL] : CL ; 1 |-- G => CL |-- G .
+    rl [tensorL] : CL ; F ** F'  |-- G => CL ;  F ;  F' |-- G .
+    rl [tensorR] : CL ; CL' |-- F ** F' => (CL |-- F) | (CL' |-- F') .
+    rl [limpL] : CL ; CL' ; F -o F'  |-- G => ( CL |-- F) | (CL' ; F' |-- G) .
+    rl [limpR] : CL |-- F -o F' => CL ; F |-- F' . 
+    rl [C] : CL ; ! F |-- G => CL ; ! F ; ! F |-- G .
+    rl [W] : CL ; ! F |-- G => CL  |-- G .
+    rl [Der] : CL ; ! F |-- G => CL ; F |-- G .
+    rl [Prom] : !CL  |-- ! G => !CL  |-- G .
+    rl [withL1] : CL ; F && F' |-- G => CL ; F |-- G .
+    rl [withL2] : CL ; F && F' |-- G => CL ; F' |-- G .
+    rl [withR ] : CL |-- F && G => (CL |-- F) | (CL |-- G) .
+    rl [oplusL] : CL ; F o F' |-- G => (CL ; F |-- G) | (CL ; F' |-- G) .
+    rl [oplusR1] : CL |-- F o F' => CL |-- F .
+    rl [oplusR2] : CL |-- F o F' => CL |-- F' .
+endm

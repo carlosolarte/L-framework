@@ -1,0 +1,88 @@
+--- ---------------------------------------
+--- Cut Elimination
+--- Multiplicative, two sided, single conclusion
+--- ---------------------------------------
+    
+***(
+
+This procedure checks for cut-elimination for 2-sided, single conclusion
+systems and the cut-rule is multiplicative (splitting the contexts among the
+premises). 
+
+)
+
+load ../../cut-elimination-base .    
+    
+mod CUT-PROVING{SPEC :: CUT-SPEC} is
+	ex CUT-BASE{SPEC} .
+
+    ----------------------------
+    var  M M'           : Module .
+    vars Q Q'           : Qid .
+    var Ans             : Trace? .
+    vars gtc gtc'       : GroundTerm .
+    vars gtp gtp'       : GroundTerm .
+    var GTGoal          : GroundTerm .
+    var  RS             : RuleSet .
+    vars GTA GTB        : GroundTerm .
+    var GF              : GroundTerm .
+    vars gh gh'         : GroundTerm .
+
+    ----------------------------
+    
+    --- Definition of the cut rule
+    eq cut-rule =                  
+	( rl '_:_['inf.INat,  '_|--_['_;_['Gamma$$:MSFormula, 'Delta$$:MSFormula], 'Formula$$:Formula]] =>
+	  '_|_[                    
+	    '_:_['h1$$:FNat, '_|--_['Gamma$$:MSFormula, 'FCut$$:Formula]],
+	    '_:_['h2$$:FNat, '_|--_['_;_['Delta$$:MSFormula, 'FCut$$:Formula] ,'Formula$$:Formula]]]
+	  [ label('\Cut) ]. ) .    
+
+    ceq holds$?(Q, Q', cut-case(
+	    M,
+	    cut-sub-case(gtc, gtp),
+	    cut-sub-case(gtc', gtp'),
+	    GTGoal,
+	    GF)) 
+      = result(M', Q, Q', GTGoal, gtc, gtp, gtc', gtp', Ans)
+      if
+	  --- Premises with implicit weakening
+	  RS := premises-W(gtc) premises-W(gtc')
+	  premises-W(gtp) premises-W(gtp')
+	  --- invertibility lemmas on the premises
+	  inv-premises(M, inv-rules, gtp) inv-premises(M, inv-rules,  gtp')
+	  already-proved-theorems
+	  --- Induction on the height of the derivation
+	  induct-height(getHeight(gtc), getHeight(gtc'), GF)
+	  --- Induction on the structure only in the principal cases
+	  if numFormulas(GTGoal) <= 1 then induct-struct(GF) else none fi
+      --- Mutual induction on the CC theorem
+      mutual-induct(getHeight(gtc), getHeight(gtc'), GF)
+	  /\ M' := newModuleRls(M, RS) 
+	  /\  Ans := metaSearchPath(M', GTGoal, upTerm(proved), nil, '*, bound-spec, 0) .
+
+
+    eq induct-struct-formula(GTA) 
+    = if getType(GTA) == 'Formula  
+      then 
+       ( rl  getHead(cut-rule) =>
+	  '_|_[
+	    apply(pr1, ('h1$$:FNat <- 'inf.INat ; 'FCut$$:Formula <- GTA)),
+	    apply(pr2, ('h2$$:FNat <- 'inf.INat ; 'FCut$$:Formula <- GTA)) ]
+	  [ label('\sCut) ]. ) 
+      else none
+      fi
+      .
+
+    --- Assuming that the multicut rule can be applied on (shorter) derivations
+    --- Contracting twice the formula is enough for this proof
+    op mutual-induct : GroundTerm GroundTerm GroundTerm -> RuleSet .
+    eq mutual-induct('suc[gh], 'suc[gh'], '!_[GTA]) =
+	(rl '_:_['inf.INat,  '_|--_['_;_['Gamma:MSFormula, 'Delta:MSFormula], 'G:Formula]] =>
+	  '_|_['_:_['suc[gh], '_|--_['Gamma:MSFormula, '!_[GTA]]],
+	    '_:_[gh', '_|--_['_;_['contract['s_^2['0.Zero], '!_[GTA]] , 'Delta:MSFormula], 'G:Formula]]]
+	  [ label('\mCut) ]. ) .
+
+    eq mutual-induct(gh, gh',  GTA) = none [owise] .
+
+endm

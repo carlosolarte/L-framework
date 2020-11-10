@@ -1,0 +1,33 @@
+--- --------------------------------------------------------
+--- Invertibility lemmas.
+--- ---------------------------------------------------------
+
+load ../../invertibility .
+
+fmod INV-G3i is
+  pr META-LEVEL .
+  op mod-name : -> Qid .
+  eq mod-name = 'ILL .
+
+  --- Bound of the search procedure
+  op bound-spec : -> Nat .
+  eq bound-spec = 10 .
+
+  --- We assume that the Height theorem: 
+  --- (if n|-- Gamma then s(n) |-- Gamma )
+  --- and also admissibility of weakening 
+
+  op already-proved-theorems : -> RuleSet .
+  eq already-proved-theorems = 
+  ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'H:Formula]] =>
+    '_:_['n:FNat, '_|--_['Gamma:MSFormula,'H:Formula]] [ label('height) ]. ) .
+
+  op file-name : -> String .
+  eq file-name = "inv.tex" .
+endfm
+
+view Inv-G3i from INV-SPEC to INV-G3i is endv    
+
+mod PROVE-INV is pr   INV-PROVING{Inv-G3i} . endm
+
+eof 

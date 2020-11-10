@@ -1,0 +1,34 @@
+--- -----------------------------------------------------------------
+--- Cut Elimination theorem (Linear version)
+--- -----------------------------------------------------------------
+load cut-lin .
+
+fmod CUT-LIN-ILL is
+    pr META-LEVEL .
+    op mod-name : -> Qid .
+    eq mod-name = 'ILL .
+    --- Bound of the search procedure
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    --- We assume the theorem on heights
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = 
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'F:Formula]] => 
+        '_:_['n:FNat, '_|--_['Gamma:MSFormula,'F:Formula]] [ label('H) ]. ) 
+    .
+
+    --- File name to write the output
+    op file-name : -> String .
+    eq file-name = "cut-lin.tex" .
+
+    --- No invertibility lemma needed
+    op inv-rules : -> QidList .
+    eq inv-rules = nil . 
+endfm
+    
+view Cut-Lin-ILL from CUT-SPEC to CUT-LIN-ILL is endv    
+
+mod PROVE-CUT-LIN is pr CUT-PROVING{Cut-Lin-ILL} . endm
+
+eof 

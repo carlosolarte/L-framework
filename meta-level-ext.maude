@@ -254,16 +254,19 @@ fmod META-LEVEL-EXT is
 		      else 
                         (if Q' == '?MSFormula then "\\CTXQ`{" + str + "`}"
                           else 
-                            (if Q' == 'Nat then "\\NAT`{" + str + "`}"
-                             else 
-                                 (if Q' == 'BFormula then "\\BF`{" + str + "`}" else
-                                    (if Q' == 'MSBFormula then "\\MSBF`{" + str + "`}"  
-                                     else str 
-                                     fi )
+                              (if Q' == '!MSFormula then "\\CTXB`{" + str + "`}" 
+                                else
+                                (if Q' == 'Nat then "\\NAT`{" + str + "`}"
+                                else 
+                                    (if Q' == 'BFormula then "\\BF`{" + str + "`}" else
+                                        (if Q' == 'MSBFormula then "\\MSBF`{" + str + "`}"  
+                                        else str 
+                                        fi )
                                   fi
                                  )
                              fi)
                         fi)
+                    fi)
 		      fi)
 		    fi)
 		fi)
