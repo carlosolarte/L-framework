@@ -33,9 +33,7 @@ mod G3c is
 	('topL |-> '\top_L), ('topR |-> '\top_R),
 	('impL |-> '\iimp_L), ('impR |-> '\iimp_R)
 	.
-    --- Fresh constant for weakening lemmas
-    op GW : -> Formula .
-    
+
     var P : Prop .
     vars F G H : Formula .
     vars C1 C2 C C' : MSFormula .

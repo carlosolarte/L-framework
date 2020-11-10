@@ -16,11 +16,17 @@ mod LL is
 
     --- units
     op 1 : -> Formula [ctor] .
+    op 0 : -> Formula [ctor] .
     op bot : -> Formula [ctor] .
+    op top : -> Formula [ctor] .
+
     
     --- Connectives
     op _**_ : Formula Formula -> Formula [ctor prec 25] . *** tensor
     op _$_ : Formula Formula -> Formula [ctor prec 25] . *** par (for Classical LL)
+    op _&&_ : Formula Formula -> Formula [ctor prec 30] . *** with
+    op _o_ : Formula Formula -> Formula [ctor prec 30] . *** oplus
+
 
     --- Exponentials 
     op !_ : Formula -> Formula [ctor prec 20] .
@@ -54,8 +60,13 @@ mod LL is
     eq dual(perp(i)) = p(i) .
     eq dual(1) = bot .
     eq dual(bot) = 1 .
+    eq dual(top) = 0 .
+    eq dual(0) = top .
     eq dual(F ** G) = dual(F) $ dual(G) .
     eq dual(F $ G) = dual(F) ** dual(G) .
+    eq dual(F && G) = dual(F) o dual(G) .
+    eq dual(F o G) = dual(F) && dual(G) .
+
     eq dual(! F) = ? dual(F) .
     eq dual(? F) = ! dual(F) .
     
@@ -65,9 +76,12 @@ mod LL is
 	('|-- |-> '\vdash),
 	('perp |-> '\llperp),
 	('** |-> '\tensor) , ('$ |-> '\lpar) ,
+    ('&& |-> '\with) , ('o |-> '\oplus) ,
 	('; |-> '`, ),
 	(': |-> '\wspace ),
 	('1 |-> '\one),
+	('0 |-> '\zero),
+    ('top |-> '\top),
 	('bot |-> '\bot), 
 	('GW |-> 'G_W)
 	.
@@ -76,8 +90,13 @@ mod LL is
 	('bot |-> '\bot),
 	('par |-> '\lpar),
 	('one |-> '\one),
+	('zero |-> '\zero),
+	('top |-> '\top),
 	('init |-> 'I),
 	('tensor |-> '\tensor),
+    ('with |-> '\with),
+    ('plusA |-> '\plusA),
+	('plusB |-> '\plusB),
 	('quest |-> '?),
 	('bang |-> '!),
 	('questC |-> '?C),
@@ -96,11 +115,15 @@ mod LL is
 
     rl [init] : |-- p(i) ; perp(i) => proved .
     rl [bot] : |-- CL ; bot => |-- CL . 
-    rl [par] : |-- CL ; F $ F' => |-- CL ; F ; F' . 
     rl [one] : |-- 1 => proved .
+    rl [top] : |-- CL ; top => proved .
+    rl [par] : |-- CL ; F $ F' => |-- CL ; F ; F' . 
     rl [tensor] : |-- CL ; CL' ;  G ** G' =>  (|-- CL ; G) | (|-- CL' ; G') .
     rl [questC] : |-- CL ; ? F => |-- CL ; ? F ; ? F .
     rl [questW] : |-- CL ; ? F => |-- CL .
     rl [quest]  : |-- CL ; ? F => |-- CL ; F .
     rl [bang]  : |-- ?CL ; ! F => |-- ?CL ; F .
+    rl [plusA] : |-- CL ; G o G' => |-- CL ; G .
+    rl [plusB] : |-- CL ; G o G' => |-- CL ; G' .
+    rl [with] : |-- CL ; G && G' => (|-- CL ; G) | (|-- CL ; G') .
 endm

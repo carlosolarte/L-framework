@@ -54,9 +54,6 @@ mod S4 is
 	('impL |-> '\to_L), ('impR |-> '\to_R),
         ('height |-> '\heightRule)
 	.
-    --- Fresh constant for weakening lemmas
-    op GW : -> Formula .
-    
     var P : Prop .
     vars F G H : Formula .
     vars C1 C2 C C' : MSFormula .

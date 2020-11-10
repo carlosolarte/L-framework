@@ -8,7 +8,7 @@ fmod ADMISSIBILITY-INV-BANG is
     pr META-LEVEL .
 
     op th-name : -> String .
-    eq th-name = "Weakening on bang: $\\vdash \\Gamma, !F$ implies $\\Gamma, F$. " .
+    eq th-name = "Weakening on bang: $\\vdash \\Gamma, !F$ implies $\\vdash \\Gamma, F$. " .
     
     op mod-name : -> Qid .
     eq mod-name = 'LL .

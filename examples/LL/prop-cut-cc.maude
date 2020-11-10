@@ -1,7 +1,6 @@
 --- Cut Elimination theorem
---- The additive cut (sharing the context) is used here where
---- weakening is embedded in the procedure (and hence, those rules do
---- not need to be added explicitly as already-proved-theorems)
+--- Multicut rule
+
 load cut-ll-cc .
 
 mod CUT-LL-CC is

@@ -1,7 +1,6 @@
+--- Multicut for LL: cutting wiht !F and then, creating n-copies of ?F^
+
 load ../../cut-elimination-base .
---- This procedure checks for cut-elimination for 1-sided system and
---- the cut-rule multiplicative
-    
     
 mod CUT-PROVING{SPEC :: CUT-SPEC} is
     pr CUT-BASE{SPEC} .
@@ -24,9 +23,6 @@ mod CUT-PROVING{SPEC :: CUT-SPEC} is
 	  '_|_['_:_['h1$$:FNat, '|--_['_;_['!_['FCut$$:Formula], 'Gamma$$:?MSFormula]]],
 	    '_:_['h2$$:FNat, '|--_['_;_['contract['s_['ncont$$:Nat], '?_['dual['FCut$$:Formula]]], 'Delta$$:MSFormula]]]]
 	  [ label('\Cut) ]. ) .
-
-
-
 
     --- Solving the case with the needed hypotheses
     ceq holds$?(Q, Q', cut-case(

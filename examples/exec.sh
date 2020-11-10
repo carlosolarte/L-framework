@@ -22,6 +22,7 @@ comp_ex "g3i" &
 comp_ex "mLJ" &
 comp_ex "LL" &
 comp_ex "MALL" &
-comp_ex "DyLL" 
+comp_ex "DyLL" &
+comp_ex "ILL" 
 wait
 
