@@ -35,8 +35,6 @@ fmod ADMISSIBILITY-C is
     op inv-rules : -> QidList .
     eq inv-rules = 'topL 'OrL 'AndL 'impL .
 
-    --- In the case of impL, mutual induction on contraction on the
-    --- right is needed
     op mutual-ind : GroundTerm -> RuleSet .
 
     eq mutual-ind (GT) = none [owise] .
@@ -84,8 +82,6 @@ fmod ADMISSIBILITY-CR is
     op inv-rules : -> QidList .
     eq inv-rules = 'botR 'OrR  'AndR .
 
-    --- In the case of impR, mutual induction on contraction on the
-    --- right is needed
     op mutual-ind : GroundTerm -> RuleSet .
     eq mutual-ind(GT) = none [owise] .
 

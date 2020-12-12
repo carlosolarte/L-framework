@@ -1,5 +1,5 @@
 --- -----------------------------------------------------------------
---- Cut Elimination theorem (Linear version)
+--- Cut Elimination theorem (Multiplicative version)
 --- No invertibility lemma is needed here but contraction needs to be added.
 --- The version of contraction here is more controlled to avoid the state explosion
 --- -----------------------------------------------------------------

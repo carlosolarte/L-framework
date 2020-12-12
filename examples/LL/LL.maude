@@ -104,9 +104,6 @@ mod LL is
 	('height |-> '\heightRule)
 	.
 
-    --- Fresh constant for weakening lemmas
-    op GW : -> Formula .
-    
     --- vars A B : Prop .
     vars F G F' G' : Formula .
     vars CL CL' : MSFormula .

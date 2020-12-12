@@ -31,7 +31,9 @@ mod mLJ is
 	('OrL |-> '\vee_L), ('OrR |-> '\vee_R),
 	('botL |-> '\bot_L), ('botR |-> '\bot_R),
 	('topL |-> '\top_L), ('topR |-> '\top_R),
-	('impL |-> '\iimp_L), ('impR |-> '\iimp_R)
+	('impL |-> '\iimp_L), ('impR |-> '\iimp_R),	
+    ('height |-> '\heightRule)
+
 	.
     
     var P : Prop .
