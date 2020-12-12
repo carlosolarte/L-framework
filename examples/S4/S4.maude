@@ -69,7 +69,8 @@ mod S4 is
     rl [OrR] :   C |-- F \/ G ; C' =>  C |-- F ; G ; C' .
     rl [impR] :  C |-- (F --> G) ; C' => C ; F |-- G ; C' .
     rl [impL] :  C ; F --> G |-- C' => ( C  |-- F ; C') | ( C ; G |-- C') .
-    rl [K] : C ; BL:MSBFormula |-- C' ; [] F => unbox(BL:MSBFormula) |-- F .
+    --- K is not needed in this system
+    --- rl [K] : C ; BL:MSBFormula |-- C' ; [] F => unbox(BL:MSBFormula) |-- F .
     rl [A4] : C ; BL:MSBFormula |-- C' ; [] F => BL:MSBFormula |-- F .
     rl [AT] : C ; [] F |-- C' => C ; [] F ; F |-- C' .
 endm

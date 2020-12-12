@@ -17,12 +17,8 @@ fmod CUT-S4 is
     eq already-proved-theorems =
 	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => 
         '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] 
-        [ label('height) ]. ) 
+        [ label('height) ]. ) . 
 
-        --- Generalized version of T
-        ( rl '_:_['inf.INat,  '_|--_[ '_;_['Gamma:MSFormula, 'BL:MSBFormula], 'Delta:MSFormula]] =>
-	  '_:_['inf.INat, '_|--_['_;_['Gamma:MSFormula, 'BL:MSBFormula, 'unbox['BL:MSBFormula]], 'Delta:MSFormula]]
-          [ label('ATG) ]. ) .
     --- File name to write the output
     op file-name : -> String .
     eq file-name = "cut.tex" .
@@ -36,3 +32,4 @@ endfm
 view Cut-S4 from CUT-SPEC to CUT-S4 is endv    
 
 mod PROVE-CUT is pr CUT-PROVING{Cut-S4} . endm
+eof
