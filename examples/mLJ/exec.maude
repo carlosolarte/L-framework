@@ -3,7 +3,7 @@ set show advisories off .
 set show command off .
 
 load mLJ .
-load prop-W .
+load prop-WH .
 load prop-inv .
 load prop-C .
 load prop-cut .
