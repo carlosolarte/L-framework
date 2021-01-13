@@ -1,4 +1,4 @@
---- System G3C (Classical propositional logic)
+--- System mLJ (Multiconclusion Intuitionistic Logic)
 
 load ../../admissibility .
 load ../../invertibility .
