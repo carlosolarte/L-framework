@@ -1,0 +1,51 @@
+
+--- -----------------------------------------------------------
+--- Height preserving admissibility of Contraction on the Left
+--- This proof requires some invertibility lemmas. See the dependencies in the
+--- definition of inv-rules below.
+--- -----------------------------------------------------------
+
+fmod ADMISSIBILITY-C is
+    pr META-LEVEL .
+    op th-name : -> String .
+    eq th-name = "Height preserving admissibility of contraction" .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'Cyber .
+
+    vars GT GT' GT'' GF : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, 'F:Formula], 'H:Formula]]
+	=> '_:_['n:FNat, '_|--_['_;_['Gamma:MSFormula, '_;_['F:Formula, 'F:Formula]] ,'H:Formula]]
+	  [ label('H) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "contraction.tex" .
+
+    --- The cases implL, SaysL, ResL. Invertibility lemmas are
+    --- needed. Note that invertibility only on the right premise of implication
+    --- left can be used
+
+    op inv-rules : -> QidList .
+    eq inv-rules = 'AndL 'OrL 'impL$$1 'ResL 'SaysL .
+
+    --- No mutual induction is needed 
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT)
+      = none .
+
+    --- No other theorem is needed 
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = none .
+
+    
+endfm
+
+view Admissibility-C from ADMISSIBILITY-SPEC to ADMISSIBILITY-C is endv    
+
+mod PROVE-C is pr  ADMISSIBILITY-THEOREM{Admissibility-C} . endm

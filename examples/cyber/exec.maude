@@ -1,0 +1,38 @@
+--- Executing all the analysis 
+
+set show advisories off .
+set show command off .
+
+load cyber .
+load prop-W .
+load prop-H .
+load prop-inv .
+load prop-C .
+load prop-cut .
+load prop-ID .
+
+--- Weakening on the left 
+erew in PROVE-W : prove-it .
+
+--- Height of derivations
+erew in PROVE-HEIGHT : prove-it .
+
+--- Invertibility lemmas
+erew in PROVE-INV : prove-it .
+
+--- Admissibility of contraction (on the left)
+erew in PROVE-C : prove-it .
+
+--- Identity expansion
+erew in PROVE-ID : prove-it .
+
+--- Cut-elimination (Additive version)
+erew in PROVE-CUT : prove-it .
+
+--- Cut-elimination (Multiplicative version)
+--- Cyberlogic has only additive cut
+---load prop-cut-lin .
+---erew in PROVE-CUT-LIN : prove-it .
+
+
+quit .

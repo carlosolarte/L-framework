@@ -1,0 +1,32 @@
+load cyber .
+load ../../permutability .
+fmod PERM is
+    pr META-LEVEL .
+
+    op mod-name : -> Qid .
+    eq mod-name = 'Cyber .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "permute.tex" .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems 
+    = ( rl '_:_['inf.INat, '_|--_['_;_['Gamma:MSFormula, 'GW:Formula], 'G:Formula]] =>
+            '_:_['inf.INat, '_|--_['Gamma:MSFormula,'G:Formula]] [ label('W) ]. ) 
+    .
+
+    op inv-rules : -> QidList .
+    eq inv-rules = 'impR 'AndR 'AndL 'impL$$1 'OrL 'topL . 
+
+
+    
+endfm
+
+view Perm from PERM-SPEC to PERM is endv    
+
+mod PROVE-PERM is pr  PERM-PROVING{Perm} . endm
+

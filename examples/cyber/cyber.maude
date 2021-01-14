@@ -1,0 +1,103 @@
+--- Cyberlogic System (propositional)
+
+load ../../sequent .
+
+mod Cyber is
+    	ex SEQUENT-SOLVING .
+
+    --- Principals
+    sort Principal .
+    sort PrincipalSet .
+    subsort Principal < PrincipalSet .
+
+    vars Q Q' : PrincipalSet .
+
+    op Pr : String -> Principal .
+    op * : -> PrincipalSet [ctor] .
+    op __ : PrincipalSet PrincipalSet -> PrincipalSet [ctor assoc comm id: *] .
+
+    --- Subset relation for sets of principals
+    op subsetP : PrincipalSet PrincipalSet -> Bool .
+    eq subsetP(Q, Q Q') = true .
+    eq subsetP(Q, Q') = false [owise] .
+    
+    --- restricting a formula
+    op resF : Formula PrincipalSet -> MSFormula .
+    eq resF(res Q' F, Q) = if subsetP(Q', Q) then res Q' F else * fi .
+    eq resF(F, Q) = * [owise] .
+
+    --- restrict C Q keeps only formulas res Q' F in C such that Q' subset Q.
+    op restrict : MSFormula PrincipalSet -> MSFormula .
+    eq  restrict(*, Q) = * .
+    --- Using the next rule the process is killed.
+    ceq restrict(res Q' F ; C, Q) = ( res Q' F ; restrict(C, Q) ) if subsetP(Q', Q) .
+    --- Using the next rule the process runs for a very long time (I killed it by hand after 20+ minutes)
+    --- eq restrict(res Q' F ; C, Q) = ( res Q' F ; restrict(C, Q) ) .
+    eq  restrict(F ; C, Q) = restrict(C, Q) [owise] .
+    --- eq  restrict(F ; C, Q) = resF(F, Q) ; restrict(C, Q) .
+    
+    --- Atomic Propositions
+    ops p : Nat -> Prop [ctor] .
+
+    --- Conjunction
+    op _/\_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- Disjunction
+    op _\/_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- Implication
+    op _-->_ : Formula Formula -> Formula [ctor prec 35] .
+    --- Attestation
+    op _:>_ : Principal Formula -> Formula [ctor prec 32] .
+    --- Knowledge
+    op res__ : PrincipalSet Formula -> Formula [ctor prec 31] .
+
+
+    eq TEXReplacement =
+	('|-- |-> '\vdash), 
+        ('/\ |-> '\wedge),
+        ('\/ |-> '\vee),
+	('--> |-> '\iimp), 
+        ('; |-> '`, ),
+        (':> |-> '\rhd),
+        ('res |-> 'res)
+	.
+
+    eq TEXReplacementSeq =
+	('AndL |-> '\wedge_L), ('AndR |-> '\wedge_R),
+	('OrL |-> '\vee_L), ('OrR |-> '\vee_R),
+	('impL |-> '\iimp_L), ('impR |-> '\iimp_R),
+	('height |-> '\heightRule),
+        ('SaysR |-> '\rhd_R),
+        ('SaysL |-> '\rhd_L),
+        ('SaysE |-> '\rhd_e),
+        ('ResR |-> 'res_R),
+        ('ResL |-> 'res_L)
+	.
+
+
+    var K : Principal .
+    var P : Prop .
+    vars F G H : Formula .
+    vars C1 C2 C C' : MSFormula .
+    
+    rl [I]    :  P ; C |-- P  => proved .
+    rl [AndL] :  F /\ G ; C |-- H => F ; G ; C |-- H .
+    rl [AndR] :  C |-- F /\ G  =>  ( C |-- F) | ( C |-- G) .
+    rl [OrL]  :  C ; F \/ G |-- H => (C ; F |-- H) | (C ; G |-- H) .
+    rl [OrR1] :  C |-- F \/ G =>  C |-- F .
+    rl [OrR2] :  C |-- F \/ G =>  C |-- G .
+    rl [impR] :  C |-- (F --> G) => C ; F |-- G .
+    rl [impL] :  C ; F --> G |-- H => ( C ; F --> G  |-- F ) | ( C ; G |-- H) .
+    --- Attestation rules
+    rl [SaysR] : C |-- K :> F => C |-- F .
+    rl [SaysL] : C ; K :> F |-- K :> G => C ; F |-- K :> G .
+    --- Adding this rule breaks cut-elimination
+    rl [SaysE] : C |-- K :> P => proved .
+    --- Knowldge rules
+    rl [ResL] : C ; res Q F |-- G => C ; F |-- G .
+    rl [ResR] : C |-- res Q F => restrict(C, Q) |-- F .
+
+    --- Lemma needed for cut-elimination and invertibility of SaysL: 
+    --- C ; K :> F |-- G  =>  C ; F |-- G
+
+endm
+

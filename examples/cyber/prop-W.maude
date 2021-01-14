@@ -1,0 +1,48 @@
+--- ---------------------------------------------------------
+--- Height preserving Weakening on the left context
+--- ---------------------------------------------------------
+
+load ../../admissibility .
+
+fmod ADMISSIBILITY-W is
+  pr META-LEVEL .
+
+  op th-name : -> String .
+  eq th-name = "Height preserving admissibility of weakening" .
+
+  op mod-name : -> Qid .
+  eq mod-name = 'Cyber .
+
+  vars GT GT' GT'' : GroundTerm .
+
+  op rule-spec : -> Rule .
+  eq rule-spec
+  = ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, 'F0:Formula], 'H:Formula]] 
+     => '_:_['n:FNat, '_|--_['Gamma:MSFormula,'H:Formula]]
+        [ label('W) ]. ) .
+
+  op bound-spec : -> Nat .
+  eq bound-spec = 10 .
+
+  op file-name : -> String .
+  eq file-name = "weakeningL.tex" .
+
+  --- Invertibility is not needed for this result
+  op inv-rules : -> QidList .
+  eq inv-rules = nil .
+
+  --- No mutual induction is needed
+  op mutual-ind : GroundTerm -> RuleSet .
+  eq mutual-ind(GT) = none .
+
+  --- No previous theorems needed
+  op already-proved-theorems : -> RuleSet .
+  eq already-proved-theorems = none .
+
+
+endfm
+
+view Admissibility-W from ADMISSIBILITY-SPEC to ADMISSIBILITY-W is endv    
+
+mod PROVE-W is pr  ADMISSIBILITY-THEOREM{Admissibility-W} . endm
+

@@ -1,0 +1,109 @@
+--- Cyberlogic System (propositional)
+--- Test with only two principals
+
+load ../../sequent .
+
+mod Cyber2principals is
+    	ex SEQUENT-SOLVING .
+
+    --- Principals
+    sort Principal .
+    sort PrincipalSet .
+    subsort Principal < PrincipalSet .
+
+    sorts P1 P2 .
+    subsort P1 P2 < Principal .
+    sorts MSP1Formulas MSP2Formulas MSP12Formulas .
+    subsort MSP12Formulas < MSFormula .
+    subsort MSP1Formulas MSP2Formulas < MSP12Formulas .
+
+    vars Q Q' : PrincipalSet .
+
+    --- Atomic Propositions
+    ops p : Nat -> Prop [ctor] .
+
+    --- Conjunction
+    op _/\_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- Disjunction
+    op _\/_ : Formula Formula -> Formula [ctor  prec 30] .
+    --- False
+    op False : -> Formula [ctor] .
+    --- True
+    op True : -> Formula [ctor] .
+    --- Implication
+    op _-->_ : Formula Formula -> Formula [ctor prec 35] .
+    --- Attestation
+    op _:>_ : Principal Formula -> Formula [ctor prec 32] .
+    --- Knowledge
+    op res1_ : Formula -> Formula [ctor prec 31] .
+    op res2_ : Formula -> Formula [ctor prec 31] .
+    op res12_ : Formula -> Formula [ctor prec 31] .
+
+    eq TEXReplacement =
+	('|-- |-> '\vdash), ('/\ |-> '\wedge) , ('\/ |-> '\vee) ,
+	('--> |-> '\iimp), ('; |-> '`, ), ('True |-> '\top),
+	('False |-> '\bot),
+        (':> |-> '\rhd),
+        ('res1 |-> 'res1),
+        ('res2 |-> 'res2),
+        ('res12 |-> 'res12)
+	.
+
+    eq TEXReplacementSeq =
+	('AndL |-> '\wedge_L), ('AndR |-> '\wedge_R),
+	('OrL |-> '\vee_L), ('OrR1 |-> '\vee_1), ('OrR2 |-> '\vee_2),
+	('botL |-> '\bot_L), ('botR |-> '\bot_R),
+	('topL |-> '\top_L), ('topR |-> '\top_R),
+	('impL |-> '\iimp_L), ('impR |-> '\iimp_R),
+	('height |-> '\heightRule),
+        ('KnowsR |-> '\rhd_R),
+        ('KnowsL |-> '\rhd_L),
+        ('KnowsE |-> '\rhd_e),
+        ('ResR1 |-> 'res_R),
+        ('ResL1 |-> 'res_L),
+        ('ResR2 |-> 'res_R),
+        ('ResL2 |-> 'res_L),
+        ('ResR12 |-> 'res_R),
+        ('ResL12 |-> 'res_L)
+	.
+
+
+    var K : Principal .
+    var P : Prop .
+    vars F G H : Formula .
+    vars C1 C2 C C' : MSFormula .
+    
+    rl [I] :     P ; C |-- P  => proved .
+    rl [AndL] :  F /\ G ; C |-- H => F ; G ; C |-- H .
+    rl [AndR] :  C |-- F /\ G  =>  ( C |-- F) | ( C |-- G) .
+    rl [botL] :  C ; False |-- H => proved .
+    rl [topR] :  C |-- True => proved .
+    rl [topL] :  C ; True |-- H => C |-- H .
+    rl [OrL] :   C ; F \/ G |-- H => (C ; F |-- H) | (C ; G |-- H) .
+    rl [OrR1] :   C |-- F \/ G =>  C |-- F .
+    rl [OrR2] :   C |-- F \/ G =>  C |-- G .
+    rl [impR] :  C |-- (F --> G) => C ; F |-- G .
+    rl [impL] :  C ; F --> G |-- H => ( C ; F --> G  |-- F ) | ( C ; G |-- H) .
+    --- Attestation rules
+    rl [KnowsR] : C |-- K :> F => C |-- F .
+    rl [KnowsL] : C ; K :> F |-- K :> G => C ; F |-- K :> G .
+    --- Adding this rule breaks cut-elimination
+    rl [KnowsE] : C |-- K :> P => proved .
+    --- Knowldge rules
+    rl [ResL1] : C ; res1 F |-- G => C ; F |-- G .
+    rl [ResL2] : C ; res2 F |-- G => C ; F |-- G .
+    rl [ResL12] : C ; res12 F |-- G => C ; F |-- G .
+    rl [ResR1] : C ; R1:MSP1Formulas |-- res1 F => R1:MSP1Formulas |-- F .
+    rl [ResR1] : C ; R2:MSP2Formulas |-- res2 F => R2:MSP2Formulas |-- F .
+    rl [ResR12] : C ; R12:MSP12Formulas |-- res12 F => R12:MSP12Formulas |-- F .
+
+endm
+
+mod TestCyber is
+
+inc Cyber2principals .
+
+ops p q r : -> Principal .
+ops a b c : -> Formula .
+
+endm
