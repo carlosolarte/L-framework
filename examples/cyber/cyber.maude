@@ -62,15 +62,19 @@ mod Cyber is
 	.
 
     eq TEXReplacementSeq =
-	('AndL |-> '\wedge_L), ('AndR |-> '\wedge_R),
-	('OrL |-> '\vee_L), ('OrR |-> '\vee_R),
-	('impL |-> '\iimp_L), ('impR |-> '\iimp_R),
+	('AndL   |-> '\wedge_L), 
+    ('AndR   |-> '\wedge_R),
+	('OrL    |-> '\vee_L), 
+    ('OrR1   |-> '\vee_R),
+    ('OrR2   |-> '\vee_R),
+	('impL   |-> '\iimp_L), 
+    ('impR   |-> '\iimp_R),
 	('height |-> '\heightRule),
-        ('SaysR |-> '\rhd_R),
-        ('SaysL |-> '\rhd_L),
-        ('SaysE |-> '\rhd_e),
-        ('ResR |-> 'res_R),
-        ('ResL |-> 'res_L)
+    ('SaysR  |-> '\rhd_R),
+    ('SaysL  |-> '\rhd_L),
+    ('SaysE  |-> '\rhd_e),
+    ('ResR   |-> '\res_R),
+    ('ResL   |-> '\res_L)
 	.
 
 

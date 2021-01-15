@@ -11,6 +11,7 @@ load prop-C .
 load prop-cut .
 load prop-ID .
 
+
 --- Weakening on the left 
 erew in PROVE-W : prove-it .
 
@@ -28,6 +29,7 @@ erew in PROVE-ID : prove-it .
 
 --- Cut-elimination (Additive version)
 erew in PROVE-CUT : prove-it .
+
 
 --- Cut-elimination (Multiplicative version)
 --- Cyberlogic has only additive cut

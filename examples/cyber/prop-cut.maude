@@ -4,7 +4,7 @@
 --- weakening is embedded in the procedure (and hence, those rules do
 --- not need to be added explicitly as already-proved-theorems)
 --- -----------------------------------------------------------------
-load ../../cut-add-scon.maude 
+load cut-procedure .
 
 fmod CUT-Cyber is
     pr META-LEVEL .
@@ -18,7 +18,8 @@ fmod CUT-Cyber is
     op already-proved-theorems : -> RuleSet .
     eq already-proved-theorems = 
     ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'F:Formula]] => 
-      '_:_['n:FNat, '_|--_['Gamma:MSFormula,'F:Formula]] [ label('H) ]. )
+      '_:_['n:FNat, '_|--_['Gamma:MSFormula,'F:Formula]] 
+      [ label('H) ]. )
     .
 
     --- File name to write the output

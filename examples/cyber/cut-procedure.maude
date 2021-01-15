@@ -1,0 +1,93 @@
+--- ---------------------------------------
+--- Cut Elimination
+--- Additive, two sided, single conclusion
+--- ---------------------------------------
+    
+***(
+This procedure checks for cut-elimination for 2-sided, single conclusion 
+systems and the cut-rule is additive (sharing the contexts among the
+premises). Weakening is certainly needed to finish some of the cases.
+)
+
+load ../../cut-elimination-base .    
+    
+mod CUT-PROVING{SPEC :: CUT-SPEC} is
+	ex CUT-BASE{SPEC} .
+
+    ----------------------------
+    var  M M'           : Module .
+    vars Q Q'           : Qid .
+    var Ans             : Trace? .
+    vars gtc gtc'       : GroundTerm .
+    vars gtp gtp'       : GroundTerm .
+    var GTGoal          : GroundTerm .
+    var GT GT'          : GroundTerm .
+    var  RS             : RuleSet .
+    vars GTA GTB        : GroundTerm .
+    var GF              : GroundTerm .
+    ----------------------------
+    
+    --- Definition of the cut rule
+    eq cut-rule =                  
+	( rl '_:_['inf.INat,  '_|--_['Gamma$$:MSFormula, 'Formula$$:Formula]] =>
+	  '_|_[                    
+	    '_:_['h1$$:FNat, '_|--_['Gamma$$:MSFormula, 'FCut$$:Formula]],
+	    '_:_['h2$$:FNat, '_|--_['_;_['Gamma$$:MSFormula, 'FCut$$:Formula] ,'Formula$$:Formula]]]
+	  [ label('\Cut) ]. ) .    
+
+    ceq holds$?(Q, Q', cut-case(
+	    M,
+	    cut-sub-case(gtc, gtp),
+	    cut-sub-case(gtc', gtp'),
+	    GTGoal,
+	    GF)) 
+      = result(M', Q, Q', GTGoal, gtc, gtp, gtc', gtp', Ans)
+      if
+	  --- Premises with implicit weakening
+	  RS := premises-W(gtc) premises-W(gtc')
+	  premises-W(gtp) premises-W(gtp')
+	  --- invertibility lemmas on the premises
+	  inv-premises(M, inv-rules, gtp) inv-premises(M, inv-rules,  gtp')
+      --- Invertibility of K (see invKRule below)
+      inv-K(M, gtp) inv-K(M, gtp')
+	  already-proved-theorems
+	  --- Induction on the height of the derivation
+	  induct-height(getHeight(gtc), getHeight(gtc'), GF)
+	  --- Induction on the structure only in the principal cases
+	  if numFormulas(GTGoal) <= 1 then induct-struct(GF) else none fi
+	  /\ M' := newModuleRls(M, RS) 
+	  /\  Ans := metaSearchPath(M', GTGoal, upTerm(proved), nil, '*, bound-spec, 0) .
+
+
+    eq induct-struct-formula(GTA) 
+    = if getType(GTA) == 'Formula  
+      then 
+       ( rl  getHead(cut-rule) =>
+	  '_|_[
+	    apply(pr1, ('h1$$:FNat <- 'inf.INat ; 'FCut$$:Formula <- GTA)),
+	    apply(pr2, ('h2$$:FNat <- 'inf.INat ; 'FCut$$:Formula <- GTA)) ]
+	  [ label('\sCut) ]. ) 
+      else none
+      fi
+      .
+
+      --- This cut-elimination procedure requires an additional lemma:
+      --- if Gamma, K:>F |-- G  then Gamma, F |- G
+      --- This lemma has to be applied forwardly: close the premises
+      --- under this lemma (when possible)
+      op invKRule : -> RuleSet .
+      eq invKRule = 
+           ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, '_:>_['K:Principal, 'F0:Formula]], 'H:Formula]] 
+             => '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula,                   'F0:Formula],  'H:Formula]]
+                [ label('WK) ]. )
+           ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, '_:>_['K:Principal, 'F0:Formula]], 'H:Formula]] 
+             => '_:_['inf.INat,'_|--_['_;_['Gamma:MSFormula,                   'F0:Formula],  'H:Formula]]
+                [ label('WK) ]. ) .
+
+
+      op inv-K : Module GroundTerm -> RuleSet .
+      eq inv-K(M, '_:_[GT,GT']) = 
+            premises-labelL('\invK, one-step(project(M, invKRule), '_:_[GT,GT']) ) . 
+      eq inv-K(M, '_|_[GT, GT']) = inv-K(M, GT) inv-K(M, GT') .
+      eq inv-K(M, GT) = none [owise] .
+endm
