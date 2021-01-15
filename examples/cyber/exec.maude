@@ -5,6 +5,7 @@ set show command off .
 
 load cyber .
 load prop-W .
+load prop-WK .
 load prop-H .
 load prop-inv .
 load prop-C .
@@ -14,6 +15,9 @@ load prop-ID .
 
 --- Weakening on the left 
 erew in PROVE-W : prove-it .
+
+--- Weakening on K
+erew in PROVE-WK : prove-it .
 
 --- Height of derivations
 erew in PROVE-HEIGHT : prove-it .

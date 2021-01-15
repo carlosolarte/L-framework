@@ -11,6 +11,7 @@ mod Cyber is
     subsort Principal < PrincipalSet .
 
     vars Q Q' : PrincipalSet .
+    op KCTE : -> Principal [ctor] .
 
     op Pr : String -> Principal .
     op * : -> PrincipalSet [ctor] .

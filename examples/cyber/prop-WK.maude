@@ -1,0 +1,51 @@
+--- ---------------------------------------------------------
+--- Proving the theorem If Gamma K:>F |-- G then Gamma, F |-G
+--- For simplicity, K is the "fresh" constant KCTE declared in
+--- cyber.maude
+--- ---------------------------------------------------------
+load ../../admissibility .
+
+fmod ADMISSIBILITY-WK is
+  pr META-LEVEL .
+
+  op th-name : -> String .
+  eq th-name = "Weakening on K" .
+
+  op mod-name : -> Qid .
+  eq mod-name = 'Cyber .
+
+  vars GT GT' GT'' : GroundTerm .
+
+  op rule-spec : -> Rule .
+  eq rule-spec
+  = ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, 'F0:Formula], 'H:Formula]] 
+     =>  '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, '_:>_['KCTE.Principal, 'F0:Formula]], 'H:Formula]]
+        [ label('WK) ]. ) .
+
+  op bound-spec : -> Nat .
+  eq bound-spec = 10 .
+
+  op file-name : -> String .
+  eq file-name = "weakeningK.tex" .
+
+  --- Invertibility is not needed for this result
+  op inv-rules : -> QidList .
+  eq inv-rules = nil .
+
+  --- No mutual induction is needed
+  op mutual-ind : GroundTerm -> RuleSet .
+  eq mutual-ind(GT) = none .
+
+  --- H is needed in this proof
+  op already-proved-theorems : -> RuleSet .
+  eq already-proved-theorems = 
+      ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'F:Formula]] =>
+      '_:_['n:FNat, '_|--_['Gamma:MSFormula,'F:Formula]]
+      [ label('H) ]. ) .
+
+endfm
+
+view Admissibility-WK from ADMISSIBILITY-SPEC to ADMISSIBILITY-WK is endv    
+
+mod PROVE-WK is pr  ADMISSIBILITY-THEOREM{Admissibility-WK} . endm
+
