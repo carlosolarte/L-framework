@@ -3,7 +3,7 @@
 set show advisories off .
 set show command off .
 
-load cyber .
+load cybersort .
 load prop-W .
 load prop-WK .
 load prop-H .
