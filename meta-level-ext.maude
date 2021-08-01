@@ -260,7 +260,10 @@ fmod META-LEVEL-EXT is
                                 else 
                                     (if Q' == 'BFormula then "\\BF`{" + str + "`}" else
                                         (if Q' == 'MSBFormula then "\\MSBF`{" + str + "`}"  
-                                        else str 
+                                        else 
+                                            ( if Q' == 'LNS then "\\LNSNAME`{" + str + "`}"  
+                                              else str fi
+                                             )
                                         fi )
                                   fi
                                  )

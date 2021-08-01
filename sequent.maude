@@ -16,20 +16,44 @@
     outputs.
    )
 
+--- ----------------------
+--- Modifications Jan 2021
+--- ----------------------
+--- * Adding support for linear nested systems (LNS):
+---   - New sort LNS and constructors
+---   - updating the procedures to support LaTeX output of LNSs
+---   - Previous Sort Sequent becomes SSequent (Simple-Sequent)
+---   - The sort Sequent now is the supersort including Simple Sequents
+---     and LNS
+
 load syntax .
 
 fmod SEQUENT is
   pr SYNTAX-BASE .
   pr NAT-INF .
+  sort SSequent . --- Simple sequents 
   sort Sequent .
+  subsort SSequent < Sequent .
 
   --- Constructor for sequents .
   --- two sided
-  op _|--_ : MSFormula MSFormula -> Sequent [ctor prec 90] .
+  op _|--_ : MSFormula MSFormula -> SSequent [ctor prec 90] .
   --- one sided
-  op |--_ : MSFormula -> Sequent [ctor prec 90] .
+  op |--_ : MSFormula -> SSequent [ctor prec 90] .
   op _:_ : INat Sequent -> Sequent [ctor prec 100] .
   op error : -> Sequent [ctor] .
+
+  --- Linear Nested Sequents
+  sort LNS .
+  subsort SSequent < LNS < Sequent .
+
+  --- Empty LNS
+  op EPS : -> LNS [ctor] .
+
+  --- Building lists of sequents
+  --- snoc style is used (no associativity to avoid problems with unification)
+
+  op _//_ : LNS SSequent -> LNS [ctor left id: EPS prec 110] .
 
 
   --- Goals to be proved (list of sequents)
@@ -54,7 +78,8 @@ mod SEQUENT-SOLVING is
   pr IO-EXT .
 
   --------------------------------------
-  vars S S'             : Sequent .
+  vars S S'             : SSequent .
+  vars LNS1 LNS2        : Sequent .
   var Ans               : Trace? .
   vars T T' T''         : Term .
   vars Ty Ty'           : Type .

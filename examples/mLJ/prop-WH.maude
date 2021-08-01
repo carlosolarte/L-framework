@@ -120,15 +120,6 @@ fmod ADMISSIBILITY-HEIGHT is
     = ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] =>
     '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('H) ]. ) .
 
-  op inductive-spec : GroundTerm -> Rule .
-  eq inductive-spec('_:_['suc[GT], '_|--_[GT', GT'']])
-    = ( rl '_:_['suc[GT],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] =>
-    '_:_[GT, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('\IH) ]. ).
-
-  op goal-spec : GroundTerm -> GroundTerm .
-  eq goal-spec('_:_['suc[GT],'_|--_[GT',GT'']])
-    = '_:_['suc['suc[GT]], '_|--_[GT', GT'']] .
-
   op bound-spec : -> Nat .
   eq bound-spec = 10 .
 

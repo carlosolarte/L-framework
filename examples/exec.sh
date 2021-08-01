@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAUDE="maude -no-wrap -batch -no-advise -no-banner"
+MAUDE="maude -allow-files -no-wrap -batch -no-advise -no-banner"
 LATEX=pdflatex
 
 comp_ex(){

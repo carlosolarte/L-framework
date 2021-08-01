@@ -8,6 +8,7 @@ load prop-inv .
 load prop-C .
 load prop-cut .
 load prop-ID .
+load prop-and.
 
 --- Weakening on the left and right 
 erew in PROVE-W : prove-it .
@@ -28,5 +29,10 @@ erew in PROVE-ID : prove-it .
 
 --- Cut-elimination
 erew in PROVE-CUT : prove-it .
+
+--- Rule A -> A /\ A
+erew in PROVE-A : prove-it .
+--- Rule A /\ A -> A
+erew in PROVE-AA : prove-it . 
 
 quit .
