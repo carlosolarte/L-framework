@@ -1,5 +1,9 @@
 --- Invertibility lemmas.
 --- Note that ?c (contraction) is invertible but not height-preserving invertible 
+--- In prop-WB it is proved that |- Gamma, !F implies |- Gamma F. Considering
+--- this result in already-proved-theorems, the rule ! is marked as invertible
+--- (in the sense that the provability of its conclusion implies the provability
+--- of the premise)
 
     
 --- ---------------------------------------------------------
@@ -18,7 +22,10 @@ fmod INV-LL is
     eq already-proved-theorems =
 	( rl '_:_['suc['n:FNat],  '|--_['Gamma:MSFormula]] => 
         '_:_['n:FNat, '|--_['Gamma:MSFormula]]
-        [ label('height) ]. ) .
+        [ label('height) ]. ) 
+    ( rl '_:_['n:FNat,  '|--_['_;_['G:Formula, 'Delta:MSFormula]]] =>
+	  '_:_['n:FNat, '|--_['_;_['!_['G:Formula], 'Delta:MSFormula ]]]
+	  [ label('W!) ]. ) .
     op file-name : -> String .
     eq file-name = "inv.tex" .
 endfm

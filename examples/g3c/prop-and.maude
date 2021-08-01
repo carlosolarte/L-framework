@@ -1,0 +1,98 @@
+--- ---------------------------------------------------------
+--- Admissibility of the rule
+--- |- A /\ A
+--- ---------
+--- |- A
+
+--- The rule 
+--- |- A
+--- ----
+--- |-A /\ A
+
+--- is admissible but it is not height-preserving admissible
+--- (see ADMISSIBILITY-AND-AA below)
+--- ---------------------------------------------------------
+
+fmod ADMISSIBILITY-AND-A is
+    pr META-LEVEL .
+
+    op th-name : -> String .
+    eq th-name = "Admissibility of $A \\to A \\wedge A$" .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'G3c .
+
+    vars GT GT' GT'' : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['n:FNat,  '_|--_['Gamma:MSFormula, '_;_['Delta:MSFormula,'A:Formula]]] =>
+	  '_:_['n:FNat, '_|--_['Gamma:MSFormula,'_;_['Delta:MSFormula,'_/\_['A:Formula, 'A:Formula]]]] [ label('A) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "admA.tex" .
+
+    --- Invertibility is not needed for these theorems
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction is needed in this case
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT) = none .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = 
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => 
+     '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] 
+     [ label('height) ]. ) .
+endfm
+
+view Admissibility-and-A from ADMISSIBILITY-SPEC to ADMISSIBILITY-AND-A is endv    
+
+mod PROVE-A is pr  ADMISSIBILITY-THEOREM{Admissibility-and-A} . endm
+
+fmod ADMISSIBILITY-AND-AA is
+    pr META-LEVEL .
+
+    op th-name : -> String .
+    eq th-name = "Admissibility of $A \\wedge A \\to A $" .
+    
+    op mod-name : -> Qid .
+    eq mod-name = 'G3c .
+
+    vars GT GT' GT'' : GroundTerm .
+    
+    op rule-spec : -> Rule .
+    eq rule-spec
+      = ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, '_;_['Delta:MSFormula,'_/\_['A:Formula, 'A:Formula]]]] =>
+	  '_:_['n:FNat, '_|--_['Gamma:MSFormula,'_;_['Delta:MSFormula,'A:Formula]]] [ label('A) ]. ) .
+
+    op bound-spec : -> Nat .
+    eq bound-spec = 10 .
+
+    op file-name : -> String .
+    eq file-name = "admAA.tex" .
+
+    --- Invertibility is not needed for these theorems
+    op inv-rules : -> QidList .
+    eq inv-rules = nil .
+
+    --- No mutual induction is needed in this case
+    op mutual-ind : GroundTerm -> RuleSet .
+    eq mutual-ind(GT) = none .
+
+    --- No previous theorems needed
+    op already-proved-theorems : -> RuleSet .
+    eq already-proved-theorems = 
+	( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] => 
+     '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] 
+     [ label('height) ]. ) .
+endfm
+
+view Admissibility-and-AA from ADMISSIBILITY-SPEC to ADMISSIBILITY-AND-AA is endv    
+
+mod PROVE-AA is pr  ADMISSIBILITY-THEOREM{Admissibility-and-AA} . endm

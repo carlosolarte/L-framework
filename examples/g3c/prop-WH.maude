@@ -26,14 +26,6 @@ fmod ADMISSIBILITY-W is
       = ( rl '_:_['n:FNat,  '_|--_['_;_['Gamma:MSFormula, 'GW:Formula], 'Delta:MSFormula]] =>
 	  '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('W) ]. ) .
 
-    op inductive-spec : GroundTerm -> Rule .
-    eq inductive-spec('_:_['suc[GT], '_|--_[GT', GT'']])
-      = ( rl '_:_[GT,  '_|--_['_;_['Gamma:MSFormula, 'GW:Formula], 'Delta:MSFormula]] =>
-	  '_:_[GT, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('\IH) ]. ).
-    op goal-spec : GroundTerm -> GroundTerm .
-    eq goal-spec('_:_['suc[GT], '_|--_[GT',GT'']])
-      = '_:_['suc[GT],  '_|--_['_;_[GT', 'GW.Formula], GT'']] .
-
     op bound-spec : -> Nat .
     eq bound-spec = 10 .
 
@@ -76,14 +68,6 @@ fmod ADMISSIBILITY-WR is
     eq rule-spec
       = ( rl '_:_['n:FNat,  '_|--_['Gamma:MSFormula,  '_;_[ 'GW:Formula, 'Delta:MSFormula]]] =>
 	  '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('W) ]. ) .
-
-    op inductive-spec : GroundTerm -> Rule .
-    eq inductive-spec('_:_['suc[GT], '_|--_[GT', GT'']])
-      = ( rl '_:_[GT,  '_|--_['Gamma:MSFormula, '_;_['GW:Formula, 'Delta:MSFormula]]] =>
-	  '_:_[GT, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('\IH) ]. ).
-    op goal-spec : GroundTerm -> GroundTerm .
-    eq goal-spec('_:_['suc[GT], '_|--_[GT',GT'']])
-      = '_:_['suc[GT],  '_|--_[GT', '_;_['GW.Formula, GT'']]] .
 
     op bound-spec : -> Nat .
     eq bound-spec = 10 .
@@ -129,15 +113,6 @@ fmod ADMISSIBILITY-HEIGHT is
     eq rule-spec
       = ( rl '_:_['suc['n:FNat],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] =>
 	  '_:_['n:FNat, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('H) ]. ) .
-
-    op inductive-spec : GroundTerm -> Rule .
-    eq inductive-spec('_:_['suc[GT], '_|--_[GT', GT'']])
-      = ( rl '_:_['suc[GT],  '_|--_['Gamma:MSFormula, 'Delta:MSFormula]] =>
-	  '_:_[GT, '_|--_['Gamma:MSFormula,'Delta:MSFormula]] [ label('\IH) ]. ).
-
-    op goal-spec : GroundTerm -> GroundTerm .
-    eq goal-spec('_:_['suc[GT],'_|--_[GT',GT'']])
-      = '_:_['suc['suc[GT]], '_|--_[GT', GT'']] .
 
     op bound-spec : -> Nat .
     eq bound-spec = 10 .
