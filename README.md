@@ -11,7 +11,7 @@ intuitionistic and classical logics, linear logic, and normal modal logics.
 ## Getting started
 
 The project was tested in [Maude
-3.0](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation).
+3.2](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation).
 No extra library is needed for execution. The tool produces
 [LaTeX](https://en.wikipedia.org/wiki/LaTeX) files with the results. 
 
