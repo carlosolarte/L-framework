@@ -131,7 +131,8 @@ mod ADMISSIBILITY-ALG{SPEC :: ADMISSIBILITY-SPEC} is
 	        apply(getHead(rule-spec), left(UT)) )   --- Applying rule rule-spec
 	    fi
       if T  := getBody(rule-spec) /\ 
-	  UT := metaVariantDisjointUnify(module, getBody(rule-spec) =? getHead(Q, module), empty, 0, N)
+	  --- UT := metaVariantDisjointUnify(module, getBody(rule-spec) =? getHead(Q, module), empty, 0, N)
+	  UT := metaIrredundantDisjointUnify(module, getBody(rule-spec) =? getHead(Q, module), '% , N)
 	  .
       
     --- =============================

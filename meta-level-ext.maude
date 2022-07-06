@@ -333,9 +333,20 @@ fmod META-LEVEL-EXT is
      = Sub .
     eq right({ Sub, Sub', N })
       = Sub' .
-    op nvar : UnificationTriple -> Nat .
-    eq nvar({ Sub, Sub', N })
-      = N .
+    eq left({ Sub, Sub', Q })
+     = Sub .
+    eq right({ Sub, Sub', Q })
+      = Sub' .
+    op left : UnificationPair -> Substitution .
+    op right : UnificationPair -> Substitution .
+    eq left({ Sub,  N })
+     = Sub .
+    eq right({ Sub,  N })
+      = Sub .
+
+    --- op nvar : UnificationTriple -> Nat .
+    --- eq nvar({ Sub, Sub', N })
+    --- = N .
 
     --- -----------------------
     --- Reachable states

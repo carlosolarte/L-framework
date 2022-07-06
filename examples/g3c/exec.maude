@@ -8,7 +8,7 @@ load prop-inv .
 load prop-C .
 load prop-cut .
 load prop-ID .
-load prop-and.
+load prop-and .
 
 --- Weakening on the left and right 
 erew in PROVE-W : prove-it .

@@ -111,7 +111,7 @@ mod PERM-ALG{SPEC :: PERM-SPEC} is
     if
 	   T  := getHead(Q, module)
 	/\ T' :=  getHead(Q', module)
-	/\ UT := metaVariantDisjointUnify(module, T =? T', empty, 0, N)
+	/\ UT := metaIrredundantDisjointUnify(module, T =? T', empty, 0, N)
     .
     --- Given a unifier, apply both rules  to see the premises
     op generate-cases : Qid Qid Term UnificationTriple -> Perm-Cases .

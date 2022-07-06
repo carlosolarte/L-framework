@@ -129,7 +129,7 @@ mod INV-ALG{SPEC :: INV-SPEC} is
         R  := getInvRule(nrule, Q) --- slicing the rule if needed
 	/\ T  := getHead(R)
 	/\ T' :=  getHead(Q', module)
-	/\ UT := metaVariantDisjointUnify(module, T =? T', empty, 0, N)
+	/\ UT := metaIrredundantDisjointUnify(module, T =? T', '%, N)
     .
 
     --- =============================
