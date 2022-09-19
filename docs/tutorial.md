@@ -108,7 +108,7 @@ empty substitution
 
 ```
 
-The rules applied in such derivation can be printed as follows (`6` is the
+The rules applied in such a derivation can be printed as follows (`6` is the
 successful state reported by the command `search` above):
 
 ```
@@ -237,7 +237,7 @@ Done! .......
 Output: weakeningL.tex
 ```
 
-The proof is written in the file `weakeningL.tex`.
+The result of the analysis is written in the file `weakeningL.tex`.
 
 At this point, it is interesting to see the results produced by the tool. 
 For that, create a LaTeX file as follows:
@@ -316,8 +316,7 @@ mod PROVE-HEIGHT is pr  ADMISSIBILITY-THEOREM{Admissibility-Height} . endm
 ```
 
 As in the case of weakening, no extra results are needed in this proof. The 
-proof, with the corresponding latex file, is obtained with the following
-commands: 
+proof is obtained with the following commands: 
 
 ```
 $> maude -allow-files 
@@ -417,11 +416,11 @@ analysis:
 ```
 
 Rerun the analysis and recompile the LaTeX document. As it can be seen, Maude
-was not able to complete some of the proofs, including conjunction (right and
-left), disjunction on the left and implication on the right. By looking at the
-failing cases, one can easily find out that both theorems (`prop-W` and
-`prop-H`) are needed here. For instance, one of the failing cases for
-conjunction looks as follows:
+was not able to complete some of the proofs, including invertibility of
+conjunction (right and left), disjunction on the left and implication on the
+right. By looking at the failing cases, one can easily find out that both
+theorems (`prop-W` and `prop-H`) are needed here. For instance, one of the
+failing cases for conjunction looks as follows:
 
 ```
 Given that 
