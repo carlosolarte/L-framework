@@ -1,9 +1,8 @@
 # L-Framework
 
-The L-Framework uses rewrite- and narrowing-based reasoning for proving crucial
-properties of sequent systems such as admissibility of structural rules,
-invertibility of rules and cut-elimination. Such procedures have been fully
-mechanized in
+The L-Framework uses rewrite-based reasoning for proving crucial properties of
+sequent systems such as admissibility of structural rules, invertibility of
+rules and cut-elimination. Such procedures have been fully mechanized in
 [Maude](http://maude.cs.illinois.edu/w/index.php/The_Maude_System), achieving a
 great degree of automation when used on several sequent systems including
 intuitionistic and classical logics, linear logic, and normal modal logics. 
