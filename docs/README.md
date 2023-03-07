@@ -26,7 +26,7 @@ substructural logics.
 Further documentation about the procedures implemented is available in the
 header of each file.  See also [this
 paper](https://link.springer.com/chapter/10.1007/978-3-319-99840-4_7) and 
-its [extended version](http://arxiv.org/abs/2101.03113) 
+its [journal version](https://www.sciencedirect.com/science/article/pii/S2352220822000803) 
 for details on how the properties of sequent systems are encoded as rewriting logic
 theories. 
 
